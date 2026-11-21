@@ -178,7 +178,7 @@ class StructuredReportComparisonTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "duplicate.json"
             path.write_text(json.dumps(report), encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "must be unique"):
+            with self.assertRaisesRegex(ValueError, "唯一"):
                 load_structured_report(path)
 
 

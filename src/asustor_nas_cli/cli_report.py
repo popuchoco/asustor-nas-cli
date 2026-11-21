@@ -3,16 +3,16 @@
 import sys
 
 from .cli_support import print_json
+from .report_comparison import (
+    compare_health_reports,
+    format_report_comparison,
+    load_structured_report,
+)
 from .report_markdown import (
     MAX_REPORT_BYTES,
     ReportFormatError,
     parse_report_bytes,
     render_report_markdown,
-)
-from .report_comparison import (
-    compare_health_reports,
-    format_report_comparison,
-    load_structured_report,
 )
 
 
