@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 — 2026-11-21
+
+- Add optional structured summaries for status, health, storage, and RAID while preserving the raw diagnostic sections.
+- Add explicit degraded RAID, failed/unknown SMART device, and generic thermal-warning observations with opt-in summary exit codes.
+- Live-smoke SMART and thermal-zone reads on the AS-202TE; record the unknown SMART states and unavailable thermal sensors in the redacted reviewed profile.
+- Add daily inspection and read-only incident-response examples.
+- Limit the research/license record to software and technical sources actually used by this project.
+
 ## 1.0.0 — 2026-11-21
 
 - Harden platform-status parsing by limiting fields to complete marker frames and rejecting malformed module states, non-text output, and extreme kernel-version values.

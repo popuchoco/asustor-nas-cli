@@ -9,6 +9,10 @@
 - SSH key path comes from `ASUSTOR_SSH_IDENTITY_FILE` or `--identity-file`.
 - HTTPS validation is enabled by default. `--ca` selects a PEM CA file; `--insecure` disables validation for that request. The options are mutually exclusive.
 - `--json` emits UTF-8 JSON for command results. Human output is for display and is not a stable parsing interface.
+- `status`, `storage`, and `raid` accept `--summary` to add a structured `diagnostic-summary` while retaining the raw SSH section in `sections`. `raid` also accepts `--exit-on-warning` to return the summary's recommended code.
+- `health --summary` adds a structured summary for system, storage, RAID, SMART, and temperature observations while retaining the raw `health` sections. It also reports whether the raw network and disk-list sections were returned. SMART and thermal observations use the same fixed read-only SSH operations as their standalone commands.
+- `health --summary --temperature-warning-celsius C` changes the generic temperature advisory threshold (default `80`). It is not a model-specific safe-temperature limit or health verdict.
+- `health --summary --exit-on-warning` returns `2` if a degraded RAID array, failed SMART state, or reading at/above the advisory temperature threshold is observed; otherwise it returns `1` for incomplete/unavailable coverage and `0` for complete observations without those signals. Without this option, successful collection returns `0` as before.
 - JSON and MCP outputs use the host label `NAS` and a stable `host_id` fingerprint instead of the configured address. IP/MAC addresses in SSH output and NAS account names in errors are redacted. SSH passwords and private-key contents are never returned or stored.
 
 ## Command catalog
@@ -18,7 +22,7 @@
 | `probe` | HTTPS `/portal/`; read-only | `probe` |
 | `doctor` | HTTPS + SSH observations; read-only | `doctor` |
 | `status` | hostname, kernel, CPU, memory, uptime | `status` |
-| `health` | System, storage, RAID, network, smartctl device list; read-only | `health` |
+| `health` | System, storage, RAID, network, smartctl device list; read-only. With `--summary`, also SMART and thermal-zone observations | `health` or `diagnostic-summary` |
 | `storage` | `df -hP` | `storage` |
 | `raid` | `/proc/mdstat` | `raid` |
 | `network` | `ip -o link/addr` | `network` |
@@ -31,6 +35,8 @@
 | `security compare` | Two saved audit/scan reports | `comparison`, schema v1 |
 | `platform status` | Kernel, DMI, module state; read-only | `platform-status`, schema v1 |
 | `platform module --load/--unload/--reset` | Fixed `modprobe` operations after compatibility gate | `platform-module-operation`, schema v1 |
+
+The `diagnostic-summary` schema is versioned independently from the package release. Summary coverage describes the completeness of parsed observations. Missing SMART or temperature support is reported as incomplete/unavailable, not as a passing health check. Raw SSH sections remain available to support review of the derived summary.
 
 `disk-topology` records device model and size but excludes serial numbers and SMART health. Array state reflects the kernel's md status output, not a full filesystem or drive-health assessment.
 
@@ -69,6 +75,7 @@ Schemas use JSON Schema Draft 2020-12 and are published under [`schemas/`](../sc
 - `platform-module-operation.schema.json`
 - `smart-health.schema.json`
 - `temperature-observation.schema.json`
+- `diagnostic-summary.schema.json`
 
 For each schema version, required field meaning is stable. Parsers should ignore unknown optional fields. `schema_version` is an integer, not the CLI package version.
 
@@ -83,6 +90,8 @@ For each schema version, required field meaning is stable. Parsers should ignore
 | `4` | Reserved for user cancellation in future; current declined confirmation returns `1` |
 
 Warnings and unknown audit checks return `1`. Disk topology returns `1` when an md array reports degraded membership. `health` returning `0` means its observation commands ran; it does not mean hardware is healthy.
+
+Structured diagnostic summaries normally return `0` after successful collection. Only `raid --exit-on-warning` and `health --summary --exit-on-warning` opt into their `recommended_exit_code`: `2` for a detected finding, `1` for incomplete coverage without a finding, or `0` for complete coverage without a finding. The 80 °C default in `health --summary` is a generic advisory and may not match the NAS model or sensor type.
 
 `adm smart` returns `0` only when every observed supported drive reports a passing SMART health status. It returns `2` when a drive reports a failed status and `1` when the tool, device, or coverage is unavailable or incomplete. The command never starts a SMART self-test.
 

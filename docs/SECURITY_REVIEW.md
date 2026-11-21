@@ -16,6 +16,8 @@ This was a code-level review of SSH command construction, module-control confirm
 - Reset checks the saved host fingerprint, SSH port, kernel release, and DMI identity and creates a second current-state snapshot before changing module state. Backup loading is capped at 1 MB.
 - JSON and MCP outputs redact the configured NAS address and account names from errors. The source and commit history were checked for the NAS address and login material supplied during setup; none were present.
 - MCP exposes read-only annotations and has no module-mutation tool. Report comparison accepts only bounded schema-version-1 security reports and does not connect to the NAS.
+- Structured CLI summaries preserve raw source sections, surface incomplete coverage separately from detected findings, and require an explicit flag before their recommended nonzero exit codes affect scripting. The health summary's default 80 °C threshold is adjustable and described as a generic advisory.
+- The AS-202TE live SMART check observed two devices with unknown health; the thermal-zone query found no sensors. Neither result was presented as a pass, and no SMART self-test was started.
 - PyPI publication requires a separate manual workflow dispatch and OIDC Trusted Publisher configuration; repository secrets are not used for a long-lived PyPI token.
 
 ## Findings addressed
@@ -28,5 +30,5 @@ The reviewed post-operation parser previously required DMI fields that the modul
 - The AS-202TE/Linux 3.4 unit is intentionally refused for module changes.
 - Loading a kernel driver can affect GPIO, LEDs, buttons, or fan behavior. The JSON backup restores managed module loaded-state only and cannot roll back firmware, data, a kernel crash, or hardware damage.
 - Ransomware checks cover a narrow DeadBolt baseline and filename/portal indicators. They do not inspect file contents or prove the NAS is clean.
-- Temperature readings are observations with no model-specific health thresholds or verdicts.
+- The standalone temperature command returns observations only. `health --summary` may flag readings at a configurable generic threshold (80 °C by default), which is not a model-specific health verdict.
 - Cross-platform CI exercises packaging and unit behavior; it does not establish live NAS compatibility on each workstation operating system.

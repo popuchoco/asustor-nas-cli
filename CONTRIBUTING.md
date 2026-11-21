@@ -25,6 +25,8 @@ Do not run mutating platform-module commands on a production NAS as part of ordi
 - Describe risks and recovery behavior for any new hardware mutation.
 - Do not commit NAS credentials, SSH keys, serial numbers, private incident reports, or platform backup snapshots.
 - Do not add copied code or binaries from reference projects without reviewing their licenses and explicitly documenting the actual reuse.
+- Keep third-party and license inventories limited to dependencies, source, binaries, or integration targets the product actually uses; design-only comparison projects belong only in the comparison notes.
+- Redact real NAS addresses and login material from commits, fixtures, documentation, examples, and logs.
 
 ## Pull requests
 

@@ -18,6 +18,7 @@ from asustor_nas_cli.security import (
     compare_reports,
 )
 from asustor_nas_cli.smart_health import parse_smart_health_output
+from asustor_nas_cli.summaries import build_diagnostic_summary, build_health_summary
 from asustor_nas_cli.temperature import parse_temperature_output
 from asustor_nas_cli.topology import parse_disk_topology
 
@@ -114,6 +115,42 @@ class PublishedSchemaTests(unittest.TestCase):
             host="NAS",
             ssh_port=22,
         )
+        diagnostic_summary = build_health_summary(
+            {
+                "system": "hostname: NAS\nkernel: Linux 6.1.0\nmemory (MiB):\nMem: 1024 512 512",
+                "storage": "Filesystem Size Used Avail Use% Mounted on\n/dev/md1 1T 500G 500G 50% /volume1",
+                "raid": "Personalities : [raid1]",
+            },
+            smart,
+            temperature,
+            host="NAS",
+            ssh_port=22,
+            warning_celsius=80.0,
+        )
+        diagnostic_summaries = [
+            diagnostic_summary,
+            build_diagnostic_summary(
+                "status",
+                {"system": "kernel: Linux 6.1.0\nMem: 1024 512 512"},
+                host="NAS",
+                ssh_port=22,
+                host_id="fixture-host",
+            ),
+            build_diagnostic_summary(
+                "storage",
+                {"storage": "Filesystem Size Used Avail Use% Mounted on\n/dev/md1 1T 500G 500G 50% /volume1"},
+                host="NAS",
+                ssh_port=22,
+                host_id="fixture-host",
+            ),
+            build_diagnostic_summary(
+                "raid",
+                {"raid": "Personalities : [raid1]\nunused devices: <none>"},
+                host="NAS",
+                ssh_port=22,
+                host_id="fixture-host",
+            ),
+        ]
         operation = {
             "schema_version": 1,
             "report_type": "platform-module-operation",
@@ -132,6 +169,7 @@ class PublishedSchemaTests(unittest.TestCase):
         }
         samples = {
             "comparison": comparison,
+            "diagnostic-summary": diagnostic_summary,
             "disk-topology": topology,
             "incident-scan": before,
             "platform-module-backup": backup,
@@ -149,6 +187,9 @@ class PublishedSchemaTests(unittest.TestCase):
                     print_json(report)
                 json_output = json.loads(output.getvalue())
                 Draft202012Validator(SCHEMAS[name]).validate(json_output)
+        for report in diagnostic_summaries:
+            with self.subTest(report=f"diagnostic-summary/{report['command']}"):
+                Draft202012Validator(SCHEMAS["diagnostic-summary"]).validate(report)
 
 
 if __name__ == "__main__":

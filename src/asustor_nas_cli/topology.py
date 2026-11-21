@@ -12,7 +12,7 @@ def _integer(value):
         return None
 
 
-def _parse_mdstat(text):
+def parse_mdstat(text):
     arrays = {}
     current = None
     for line in text.splitlines():
@@ -129,7 +129,7 @@ def parse_disk_topology(output, host=None):
         elif line.strip() and line.startswith("__ADM_"):
             parse_errors += 1
 
-    arrays = _parse_mdstat("\n".join(mdstat_lines))
+    arrays = parse_mdstat("\n".join(mdstat_lines))
     for name, members in array_members.items():
         item = arrays.setdefault(name, {"name": name, "state": None, "level": None, "degraded": None})
         item["members"] = sorted(set(item.get("members", [])) | members)

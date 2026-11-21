@@ -5,8 +5,8 @@
 | Device / software | Verification | Result |
 | --- | --- | --- |
 | ASUSTOR AS-202TE, ADM 3.5.9.RWM1, Linux 3.4.26 i686, BusyBox 1.19.3 | Live read-only SSH/HTTPS checks | System, storage, RAID, network, disk listing, disk topology, DeadBolt audit, and bounded filename scan exercised |
-| ASUSTOR AS-202TE SMART health command | Parser and command-generation tests only | Not yet exercised live; `adm disks` only lists `smartctl --scan` devices |
-| ASUSTOR AS-202TE temperature command | Parser, schema, and command-generation tests only | Not yet exercised live; generic thermal-zone sensors may be unavailable on older ADM kernels |
+| ASUSTOR AS-202TE SMART health command | Live read-only smoke | Two supported block devices were observed; both health states were unknown and coverage was partial. No self-tests were started |
+| ASUSTOR AS-202TE temperature command | Live read-only smoke | No thermal-zone sensors were exposed; coverage was unavailable |
 | ASUSTOR AS-202TE platform-module operations | Compatibility-gate evaluation | Refused: Linux 3.4 is below the driver project's Linux 6.1 floor; AS-202TE is not in its hardware allowlist |
 | ASUSTOR AS5402T, ADM 5.1.4 | Reference-project report only | Not tested by this CLI |
 | Other ASUSTOR models / ADM releases | None | Not yet verified |

@@ -27,6 +27,7 @@ MCP and ordinary inspection commands are read-only. Kernel-module load/unload is
 | `cli_platform.py` | Guarded platform-module command flow |
 | `cli_smart.py` | Read-only SMART health command handler |
 | `cli_temperature.py` | Read-only thermal-zone temperature handler |
+| `summaries.py` | Parse optional system, storage, RAID, SMART, and thermal observations into derived summaries and risk signals |
 | `client.py` | HTTPS probe and OpenSSH transport; no password storage |
 | `commands.py` | Fixed ADM/Linux query allowlist and section parser |
 | `topology.py` | Parse `/sys/block`, `/proc/mdstat`, and `/proc/mounts` observations |
@@ -56,6 +57,7 @@ The local backup reader rejects malformed data and files over 1 MB before sendin
 - No password or private key contents in reports.
 - No serial numbers or SMART health in disk-topology output.
 - Temperature reports contain generic thermal-zone IDs and values only; no model thresholds or health verdicts are inferred.
+- Structured summaries retain their source sections and represent unavailable or malformed observations as incomplete; the configurable 80 °C health-summary threshold is a generic advisory, not a model-specific verdict.
 - No writes through MCP.
 - No claim of a clean infection scan from the absence of filename/portal indicators.
 - `schema_version` changes only when a report's required structure or interpretation changes.

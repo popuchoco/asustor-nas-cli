@@ -4,7 +4,7 @@
 
 以 Python 撰寫的 ASUSTOR ADM NAS 安全優先命令列工具，提供唯讀診斷、磁碟拓樸、DeadBolt 勒索病毒防護檢查，以及有相容性閘門的核心模組管理。指令名稱為 `adm`，取自 ASUSTOR 作業系統名稱。
 
-[English](README.md) · [指令規格](docs/CLI_SPEC.md) · [相容性說明](docs/COMPATIBILITY.md) · [疑難排解](docs/TROUBLESHOOTING.md) · [安全政策](SECURITY.md) · [研究來源與授權](docs/RESEARCH_AND_LICENSES.md)
+[English](README.md) · [指令規格](docs/CLI_SPEC.md) · [相容性說明](docs/COMPATIBILITY.md) · [疑難排解](docs/TROUBLESHOOTING.md) · [巡檢手冊](docs/COOKBOOK.md) · [安全政策](SECURITY.md) · [研究來源與授權](docs/RESEARCH_AND_LICENSES.md)
 
 ## 功能
 
@@ -60,6 +60,7 @@ CLI JSON 和 MCP 回應會以 `NAS` 作為主機標籤，並提供穩定的 `hos
 | --- | --- |
 | `adm probe` | 檢查 ADM HTTPS 管理頁與憑證 |
 | `adm doctor` | 檢查 HTTPS 並收集 SSH 診斷資料 |
+| `adm status --summary`、`health --summary`、`storage --summary`、`raid --summary` | 加入結構化摘要並保留原始 sections |
 | `adm status`、`health`、`storage`、`raid`、`network`、`disks` | 讀取 ADM 與 Linux 狀態 |
 | `adm disk-topology` | 對應磁碟、分割區、md 陣列與資料卷 |
 | `adm smart` | 讀取 SMART 健康狀態，不啟動磁碟自我測試 |
@@ -73,9 +74,13 @@ CLI JSON 和 MCP 回應會以 `NAS` 作為主機標籤，並提供穩定的 `hos
 
 NAS 資料查詢指令支援 `--json`。JSON 報告使用 `schema_version: 1`，規格位於 [`schemas/`](schemas/)。退出碼見[指令規格](docs/CLI_SPEC.md)。
 
-`adm smart` 只對支援的區塊裝置名稱執行 `smartctl -H -n standby`，不會啟動 SMART 自我測試，也不輸出磁碟序號或屬性；待機磁碟可能回報未知。此指令目前有解析器與 schema 測試，尚未在 AS-202TE 實機執行。
+`--summary` 會輸出版本化的 `diagnostic-summary` JSON，並保留原始指令內容在 `sections`。`adm health --summary` 也會唯讀收集 SMART 與溫度觀察；溫度警示預設採通用、可調整的 80°C 提醒值。thermal-zone 編號不會指出感測器所屬元件，因此不代表機型專屬的溫度健康判定。加上 `--exit-on-warning` 後，偵測到 RAID／SMART／溫度問題回傳 `2`，資料不完整回傳 `1`，完整且沒有警示回傳 `0`。
 
-`adm temperature` 讀取 `/sys/class/thermal/thermal_zone*/temp` 唯讀介面，並將毫攝氏度換算為攝氏度；輸出只含通用區域編號和讀值。感測器可用性依機型和核心而異，工具不會推測溫度門檻或健康結論。此指令目前有解析器與 schema 測試，尚未在 AS-202TE 實機執行。
+`adm smart` 只對支援的區塊裝置名稱執行 `smartctl -H -n standby`，不會啟動 SMART 自我測試，也不輸出磁碟序號或屬性；待機磁碟可能回報未知。AS-202TE 唯讀實測看到兩個支援裝置，但健康狀態都未知、涵蓋範圍不完整，因此不能據此判定磁碟健康。
+
+`adm temperature` 讀取 `/sys/class/thermal/thermal_zone*/temp` 唯讀介面，並將毫攝氏度換算為攝氏度；輸出只含通用區域編號和讀值。感測器可用性依機型和核心而異；AS-202TE 實測沒有可用的 thermal-zone 感測器。此指令本身不套用溫度門檻。
+
+端到端範例見[日常巡檢與事件應對手冊](docs/COOKBOOK.md)。
 
 ## DeadBolt 勒索病毒防範與檢測
 
@@ -146,7 +151,7 @@ adm platform module --reset --host NAS-IP --user nas-user \
 
 指令結構參照 [Synology NAS CLI](https://github.com/akari-sora/synology-nas-cli) 與 [QNAP NAS CLI](https://github.com/popuchoco/qnap-nas-cli)：以作業系統名稱為指令開頭、提供結構化報告、MCP、明確安全邊界、相容性說明與可重用文件。[參考專案比對](docs/REFERENCE_REVIEW.md)說明三個 ASUSTOR 專案的採納與排除範圍。
 
-另見[架構](docs/ARCHITECTURE.md)、[疑難排解](docs/TROUBLESHOOTING.md)、[發布檢查清單](docs/RELEASE_CHECKLIST.md)、[安全檢視](docs/SECURITY_REVIEW.md)、[貢獻指南](CONTRIBUTING.md)、[發布與安裝](docs/PUBLISHING.md)、[更新紀錄](CHANGELOG.md)和[安全政策](SECURITY.md)。
+另見[架構](docs/ARCHITECTURE.md)、[疑難排解](docs/TROUBLESHOOTING.md)、[巡檢手冊](docs/COOKBOOK.md)、[發布檢查清單](docs/RELEASE_CHECKLIST.md)、[安全檢視](docs/SECURITY_REVIEW.md)、[貢獻指南](CONTRIBUTING.md)、[發布與安裝](docs/PUBLISHING.md)、[更新紀錄](CHANGELOG.md)和[安全政策](SECURITY.md)。
 
 ## 授權、研究來源與商標
 

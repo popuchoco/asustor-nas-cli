@@ -9,9 +9,26 @@
     "read-only system and storage diagnostics",
     "DeadBolt prevention audit",
     "DeadBolt filename scan",
-    "disk topology observation"
+    "disk topology observation",
+    "SMART health command live smoke (2 devices observed; both health states unknown)",
+    "temperature command live smoke (no thermal-zone sensors exposed)"
   ],
+  "read_only_observations": {
+    "smart_health": {
+      "coverage": "partial",
+      "state": "unknown",
+      "device_count": 2,
+      "failed_count": 0,
+      "unknown_count": 2,
+      "self_tests_started": false
+    },
+    "temperature": {
+      "coverage": "unavailable",
+      "sensor_count": 0,
+      "thresholds_applied": false
+    }
+  },
   "platform_module_mutation_attempted": false,
   "platform_module_block_reason": "The kernel is below the Linux 6.1 minimum.",
-  "redaction": "No host address, account name, password, MAC address, or disk serial is retained."
+  "redaction": "No host address, account name, password, MAC address, disk serial, or raw command output is retained."
 }

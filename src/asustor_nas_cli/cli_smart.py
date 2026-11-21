@@ -12,7 +12,7 @@ from .smart_health import (
 )
 
 
-def run_smart_health(args):
+def collect_smart_health(args):
     try:
         output = run_ssh(
             args.host,
@@ -39,10 +39,17 @@ def run_smart_health(args):
         report["coverage"] = "unavailable"
         report["tool_error"] = "ssh_unavailable"
         report["notes"].append(safe_error)
+        return report, safe_error
+    return report, None
+
+
+def run_smart_health(args):
+    report, error = collect_smart_health(args)
+    if error:
         if args.json:
             print_json(report)
         else:
-            print(f"adm: {safe_error}", file=sys.stderr)
+            print(f"adm: {error}", file=sys.stderr)
         return 1
 
     if args.json:

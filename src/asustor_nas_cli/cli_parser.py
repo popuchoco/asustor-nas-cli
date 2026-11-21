@@ -2,6 +2,7 @@
 
 import argparse
 import ipaddress
+import math
 import os
 import re
 
@@ -45,6 +46,16 @@ def scan_seconds(value):
 
 def scan_hits(value):
     return bounded_integer(value, 1, 10000, "--max-hits")
+
+
+def temperature_warning(value):
+    try:
+        temperature = float(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("temperature warning must be a number") from error
+    if not math.isfinite(temperature) or not 1 <= temperature <= 150:
+        raise argparse.ArgumentTypeError("temperature warning must be from 1 to 150 °C")
+    return temperature
 
 def add_common_arguments(parser, needs_ssh=False):
     parser.add_argument(
@@ -110,6 +121,9 @@ def build_parser():
 
     health = commands.add_parser("health", help="collect read-only system and storage observations")
     add_common_arguments(health, needs_ssh=True)
+    health.add_argument("--summary", action="store_true", help="include structured RAID, SMART and temperature observations")
+    health.add_argument("--exit-on-warning", action="store_true", help="return the summary's recommended nonzero exit code for warnings or incomplete coverage")
+    health.add_argument("--temperature-warning-celsius", type=temperature_warning, default=80.0, help="advisory thermal-zone threshold in °C for `health --summary` (default: 80)")
 
     for name, description in (
         ("status", "read system, CPU and memory information over SSH"),
@@ -123,6 +137,10 @@ def build_parser():
     ):
         command_parser = commands.add_parser(name, help=description)
         add_common_arguments(command_parser, needs_ssh=True)
+        if name in {"status", "storage", "raid"}:
+            command_parser.add_argument("--summary", action="store_true", help="include structured summary and preserve raw sections")
+        if name == "raid":
+            command_parser.add_argument("--exit-on-warning", action="store_true", help="return the summary's recommended nonzero exit code for degraded or unavailable RAID status")
 
     security = commands.add_parser("security", help="audit ransomware prevention and compare reports")
     security_commands = security.add_subparsers(dest="security_action", required=True)

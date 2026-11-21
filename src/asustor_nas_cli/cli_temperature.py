@@ -8,7 +8,7 @@ from .privacy import REDACTED_HOST, host_fingerprint, redact_sensitive_text
 from .temperature import build_temperature_command, format_temperature, parse_temperature_output
 
 
-def run_temperature(args):
+def collect_temperature(args):
     try:
         output = run_ssh(
             args.host,
@@ -34,10 +34,17 @@ def run_temperature(args):
         )
         report["coverage"] = "unavailable"
         report["notes"].append(safe_error)
+        return report, safe_error
+    return report, None
+
+
+def run_temperature(args):
+    report, error = collect_temperature(args)
+    if error:
         if args.json:
             print_json(report)
         else:
-            print(f"adm: {safe_error}", file=sys.stderr)
+            print(f"adm: {error}", file=sys.stderr)
         return 1
 
     if args.json:

@@ -5,12 +5,13 @@ import sys
 from .cli_parser import build_parser, validate_user
 from .cli_platform import run_platform
 from .cli_security import run_incident_scan, run_security_audit, run_security_compare
-from .cli_smart import run_smart_health
+from .cli_smart import collect_smart_health, run_smart_health
 from .cli_support import print_json, run_ssh_sections
-from .cli_temperature import run_temperature
+from .cli_temperature import collect_temperature, run_temperature
 from .client import CliError, probe_adm
 from .commands import DOCTOR_SECTIONS
 from .privacy import REDACTED_HOST, host_fingerprint, redact_sensitive_text
+from .summaries import build_diagnostic_summary, build_health_summary, format_diagnostic_summary
 from .topology import format_disk_topology, parse_disk_topology
 
 
@@ -49,6 +50,21 @@ def run_probe(args):
 def run_read_command(args):
     section_name = "system" if args.command == "status" else args.command
     sections = run_ssh_sections(args, (section_name,))
+    if getattr(args, "summary", False):
+        report = build_diagnostic_summary(
+            args.command,
+            sections,
+            host=args.host,
+            ssh_port=args.port,
+            host_id=host_fingerprint(args.host),
+        )
+        if args.json:
+            print_json(report)
+        else:
+            print(format_diagnostic_summary(report))
+        if getattr(args, "exit_on_warning", False):
+            return report["summary"]["recommended_exit_code"]
+        return 0
     if args.json:
         print_json(
             {
@@ -65,6 +81,25 @@ def run_read_command(args):
 
 def run_health(args):
     sections = run_ssh_sections(args, DOCTOR_SECTIONS)
+    if args.summary:
+        smart_report, _ = collect_smart_health(args)
+        temperature_report, _ = collect_temperature(args)
+        report = build_health_summary(
+            sections,
+            smart_report,
+            temperature_report,
+            host=args.host,
+            ssh_port=args.port,
+            warning_celsius=args.temperature_warning_celsius,
+            host_id=host_fingerprint(args.host),
+        )
+        if args.json:
+            print_json(report)
+        else:
+            print(format_diagnostic_summary(report))
+        if args.exit_on_warning:
+            return report["summary"]["recommended_exit_code"]
+        return 0
     if args.json:
         print_json(
             {
@@ -164,6 +199,8 @@ def main():
         parser.error("provide a NAS address with --host or ASUSTOR_HOST")
     if args.timeout < 1:
         parser.error("--timeout must be at least 1 second")
+    if getattr(args, "exit_on_warning", False) and not getattr(args, "summary", False):
+        parser.error("--exit-on-warning requires --summary")
 
     if args.command == "probe":
         if args.ca and args.insecure:

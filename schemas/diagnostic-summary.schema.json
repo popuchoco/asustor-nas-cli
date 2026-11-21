@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/diagnostic-summary.schema.json",
+  "title": "ASUSTOR ADM structured diagnostic summary",
+  "type": "object",
+  "required": ["schema_version", "report_type", "command", "host", "host_id", "ssh_port", "summary", "sections"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "diagnostic-summary"},
+    "command": {"enum": ["status", "health", "storage", "raid"]},
+    "host": {"type": ["string", "null"]},
+    "host_id": {"type": ["string", "null"]},
+    "ssh_port": {"type": ["integer", "null"]},
+    "summary": {
+      "type": "object",
+      "required": ["state", "coverage", "risk_signals", "recommended_exit_code"],
+      "properties": {
+        "state": {"enum": ["observed", "attention", "degraded", "no_arrays", "unknown"]},
+        "coverage": {"enum": ["complete", "partial", "unavailable"]},
+        "recommended_exit_code": {"enum": [0, 1, 2]},
+        "risk_signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["code", "severity", "message"],
+            "properties": {
+              "code": {"enum": ["raid_degraded", "smart_failed", "temperature_high"]},
+              "severity": {"enum": ["warning", "critical"]},
+              "message": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "system": {
+          "type": "object",
+          "required": ["hostname", "kernel", "uptime", "cpu", "memory_mib", "parse_errors", "coverage"],
+          "properties": {
+            "hostname": {"type": ["string", "null"]},
+            "kernel": {"type": ["string", "null"]},
+            "uptime": {"type": ["string", "null"]},
+            "cpu": {"type": ["string", "null"]},
+            "memory_mib": {
+              "type": ["object", "null"],
+              "required": ["total_mib", "used_mib", "free_mib"],
+              "properties": {
+                "total_mib": {"type": "integer", "minimum": 0},
+                "used_mib": {"type": "integer", "minimum": 0},
+                "free_mib": {"type": "integer", "minimum": 0}
+              },
+              "additionalProperties": false
+            },
+            "parse_errors": {"type": "integer", "minimum": 0},
+            "coverage": {"enum": ["complete", "partial", "unavailable"]}
+          },
+          "additionalProperties": false
+        },
+        "storage": {
+          "type": "object",
+          "required": ["filesystem_count", "filesystems", "maximum_use_percent", "parse_errors", "coverage"],
+          "properties": {
+            "filesystem_count": {"type": "integer", "minimum": 0},
+            "filesystems": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["source", "size", "used", "available", "use_percent", "mountpoint"],
+                "properties": {
+                  "source": {"type": "string"},
+                  "size": {"type": "string"},
+                  "used": {"type": "string"},
+                  "available": {"type": "string"},
+                  "use_percent": {"type": "integer", "minimum": 0, "maximum": 100},
+                  "mountpoint": {"type": "string"}
+                },
+                "additionalProperties": false
+              }
+            },
+            "maximum_use_percent": {"type": ["integer", "null"], "minimum": 0, "maximum": 100},
+            "parse_errors": {"type": "integer", "minimum": 0},
+            "coverage": {"enum": ["complete", "partial", "unavailable"]}
+          },
+          "additionalProperties": false
+        },
+        "raid": {
+          "type": "object",
+          "required": ["state", "coverage", "array_count", "degraded_arrays", "unknown_arrays", "arrays"],
+          "properties": {
+            "state": {"enum": ["degraded", "unknown", "observed", "no_arrays"]},
+            "coverage": {"enum": ["complete", "partial", "unavailable"]},
+            "array_count": {"type": "integer", "minimum": 0},
+            "degraded_arrays": {"type": "array", "items": {"type": "string"}},
+            "unknown_arrays": {"type": "array", "items": {"type": "string"}},
+            "arrays": {"type": "array", "items": {"type": "object"}}
+          },
+          "additionalProperties": false
+        },
+        "smart": {
+          "type": "object",
+          "required": ["coverage", "state", "device_count", "failed_count", "unknown_count", "failed_devices", "unknown_devices"],
+          "properties": {
+            "coverage": {"enum": ["complete", "partial", "unavailable"]},
+            "state": {"enum": ["passed", "failed", "unknown"]},
+            "device_count": {"type": "integer", "minimum": 0},
+            "failed_count": {"type": "integer", "minimum": 0},
+            "unknown_count": {"type": "integer", "minimum": 0},
+            "failed_devices": {"type": "array", "items": {"type": "string", "pattern": "^(sd[a-z]+|nvme[0-9]+n[0-9]+)$"}},
+            "unknown_devices": {"type": "array", "items": {"type": "string", "pattern": "^(sd[a-z]+|nvme[0-9]+n[0-9]+)$"}}
+          },
+          "additionalProperties": false
+        },
+        "temperature": {
+          "type": "object",
+          "required": ["coverage", "sensor_count", "minimum_celsius", "maximum_celsius", "warning_threshold_celsius", "high_count", "high_sensors"],
+          "properties": {
+            "coverage": {"enum": ["complete", "partial", "unavailable"]},
+            "sensor_count": {"type": "integer", "minimum": 0},
+            "minimum_celsius": {"type": ["number", "null"]},
+            "maximum_celsius": {"type": ["number", "null"]},
+            "warning_threshold_celsius": {"type": "number", "minimum": 1, "maximum": 150},
+            "high_count": {"type": "integer", "minimum": 0},
+            "high_sensors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["sensor", "celsius"],
+                "properties": {
+                  "sensor": {"type": "string", "pattern": "^thermal_zone[0-9]+$"},
+                  "celsius": {"type": "number"}
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "temperature_warning_celsius": {"type": "number", "minimum": 1, "maximum": 150}
+      },
+      "additionalProperties": false
+    },
+    "sections": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": "string"}
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"command": {"const": "status"}}, "required": ["command"]}, "then": {"properties": {"summary": {"required": ["system"]}}}},
+    {"if": {"properties": {"command": {"const": "storage"}}, "required": ["command"]}, "then": {"properties": {"summary": {"required": ["storage"]}}}},
+    {"if": {"properties": {"command": {"const": "raid"}}, "required": ["command"]}, "then": {"properties": {"summary": {"required": ["raid"]}}}},
+    {"if": {"properties": {"command": {"const": "health"}}, "required": ["command"]}, "then": {"properties": {"summary": {"required": ["system", "storage", "raid", "smart", "temperature", "temperature_warning_celsius", "additional_sections"], "properties": {"additional_sections": {"type": "object", "required": ["network", "disks"], "properties": {"network": {"enum": ["complete", "unavailable"]}, "disks": {"enum": ["complete", "unavailable"]}}, "additionalProperties": false}}}}}}
+  ],
+  "additionalProperties": false
+}
