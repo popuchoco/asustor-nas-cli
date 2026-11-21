@@ -21,10 +21,22 @@ $healthExitCode = $LASTEXITCODE
 Interpret the result as follows:
 
 - `0`: all included observations were complete and no configured risk signal was found.
-- `1`: at least one source was incomplete or unavailable. Unknown SMART states and unavailable temperature sensors do not count as healthy.
+- `1`: at least one required health source was incomplete or unavailable. Unknown SMART states and unavailable temperature sensors do not count as healthy. Optional service, UPS, and connection observations report their own coverage without changing this code.
 - `2`: a degraded RAID array, failed SMART health state, or thermal-zone reading at/above the advisory threshold was observed.
 
 The default temperature advisory is 80 °C and can be adjusted with `--temperature-warning-celsius`. Sensor IDs are generic Linux zone names; they do not identify a component, and the threshold is not a model-specific safety limit. Review raw sections and verify any warning with the NAS vendor's guidance.
+
+The health report also carries three optional operations observations: allowlisted service-process counts, local NUT UPS status and battery charge, and IPv4/IPv6 TCP state counts. These fields do not add risk signals or alter health summary exit codes. A zero process count means only that the process name was not observed; it does not say that a service is expected to run. Missing UPS support is reported as unavailable, not as a failed health check.
+
+Collect those observations individually when useful:
+
+```powershell
+adm services --host nas.example --user nas-user --json > .\services.json
+adm ups --host nas.example --user nas-user --json > .\ups.json
+adm connections --host nas.example --user nas-user --json > .\connections.json
+```
+
+The service report exposes names from a fixed process allowlist and counts, never full command lines. UPS names are not emitted. The connection report contains counts only and omits local and remote addresses and ports.
 
 For a quick single-area check, `adm status --summary`, `adm storage --summary`, and `adm raid --summary` preserve each raw section alongside its parsed fields. `adm raid --summary --exit-on-warning` returns a nonzero status when coverage is incomplete or an array is degraded.
 

@@ -2,6 +2,7 @@
 
 import sys
 
+from .cli_observations import run_observation
 from .cli_parser import build_parser, validate_user
 from .cli_platform import run_platform
 from .cli_report import run_report_compare, run_report_render
@@ -10,7 +11,7 @@ from .cli_smart import collect_smart_health, run_smart_health
 from .cli_support import print_json, run_ssh_sections
 from .cli_temperature import collect_temperature, run_temperature
 from .client import CliError, probe_adm
-from .commands import DOCTOR_SECTIONS
+from .commands import DOCTOR_SECTIONS, HEALTH_OBSERVATION_SECTIONS
 from .privacy import REDACTED_HOST, host_fingerprint, redact_sensitive_text
 from .summaries import build_diagnostic_summary, build_health_summary, format_diagnostic_summary
 from .topology import format_disk_topology, parse_disk_topology
@@ -81,7 +82,7 @@ def run_read_command(args):
     return 0
 
 def run_health(args):
-    sections = run_ssh_sections(args, DOCTOR_SECTIONS)
+    sections = run_ssh_sections(args, (*DOCTOR_SECTIONS, *HEALTH_OBSERVATION_SECTIONS))
     if args.summary:
         smart_report, _ = collect_smart_health(args)
         temperature_report, _ = collect_temperature(args)
@@ -231,6 +232,8 @@ def main():
             return run_smart_health(args)
         if args.command == "temperature":
             return run_temperature(args)
+        if args.command in {"services", "ups", "connections"}:
+            return run_observation(args)
         if args.command == "security" and args.security_action == "audit":
             return run_security_audit(args)
         if args.command == "incident" and args.incident_action == "scan":

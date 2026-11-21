@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/connection-observations.schema.json",
+  "title": "ASUSTOR ADM TCP connection-state counts",
+  "type": "object",
+  "required": ["schema_version", "report_type", "generated_at", "host", "host_id", "ssh_port", "coverage", "protocol", "ipv4", "ipv6", "note"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "connection-observations"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "host": {"const": "NAS"},
+    "host_id": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
+    "ssh_port": {"type": "integer", "minimum": 1, "maximum": 65535},
+    "coverage": {"enum": ["complete", "partial", "unavailable"]},
+    "protocol": {"const": "TCP"},
+    "ipv4": {"$ref": "#/$defs/tcpCounts"},
+    "ipv6": {"$ref": "#/$defs/tcpCounts"},
+    "note": {"type": "string"}
+  },
+  "$defs": {
+    "tcpCounts": {
+      "type": ["object", "null"],
+      "required": ["total", "established", "listening"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "established": {"type": "integer", "minimum": 0},
+        "listening": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

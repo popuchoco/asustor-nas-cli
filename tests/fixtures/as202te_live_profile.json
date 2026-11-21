@@ -11,8 +11,12 @@
     "DeadBolt filename scan",
     "disk topology observation",
     "SMART health command live smoke (2 devices observed; both health states unknown)",
-    "temperature command live smoke (no thermal-zone sensors exposed)"
+    "temperature command live smoke (no thermal-zone sensors exposed)",
+    "allowlisted service process count observation",
+    "local NUT UPS status and battery observation",
+    "IPv4/IPv6 TCP state-count observation without addresses"
   ],
+  "reviewed_on": "2026-11-21",
   "read_only_observations": {
     "smart_health": {
       "coverage": "partial",
@@ -26,6 +30,40 @@
       "coverage": "unavailable",
       "sensor_count": 0,
       "thresholds_applied": false
+    },
+    "services": {
+      "coverage": "complete",
+      "allowlisted_process_counts": {
+        "sshd": 4,
+        "httpd": 0,
+        "nginx": 5,
+        "smbd": 1,
+        "nmbd": 1,
+        "afpd": 1,
+        "avahi-daemon": 2,
+        "crond": 1,
+        "mysqld": 0,
+        "minidlna": 0,
+        "upsd": 1,
+        "upsmon": 2
+      },
+      "full_command_lines_collected": false
+    },
+    "ups": {
+      "coverage": "complete",
+      "source": "nut",
+      "configured_device_count": 1,
+      "observed_devices": 1,
+      "status": "online",
+      "battery_charge_percent": 100,
+      "device_names_retained": false
+    },
+    "connections": {
+      "coverage": "complete",
+      "protocol": "TCP",
+      "ipv4": {"total": 21, "established": 3, "listening": 18},
+      "ipv6": {"total": 12, "established": 0, "listening": 12},
+      "addresses_or_ports_retained": false
     }
   },
   "platform_module_mutation_attempted": false,

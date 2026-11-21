@@ -37,6 +37,9 @@ A `partial` or `unavailable` coverage state means the CLI could not collect or p
 - `adm incident scan` requires a bounded scan environment with `find -xdev`, `timeout`, and `awk`. If those capabilities are missing, file coverage is unavailable rather than clean.
 - `adm health` reports command output. It does not turn every observation into a hardware-health verdict.
 - `adm health --summary` also needs SMART and thermal commands. A missing tool or unreadable sensor is recorded as incomplete/unavailable; check the report's coverage before treating a summary as complete.
+- `adm ups` needs the NAS's local NUT `upsc` client and an available local NUT server/device. It does not configure or control a UPS. This version observes the first configured device; multiple devices produce partial coverage. UPS availability does not change health-summary coverage or exit codes.
+- `adm services` reads exact process names from a fixed `/proc/*/comm` allowlist. Partial or unavailable coverage means names could not be observed, not that a service should be running.
+- `adm connections` counts TCP states from `/proc/net/tcp` and `/proc/net/tcp6`. A missing table produces partial coverage; addresses and ports are never returned.
 
 ## Platform-module control is blocked
 

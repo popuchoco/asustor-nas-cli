@@ -2,6 +2,11 @@
 
 import re
 
+from .observations import (
+    parse_connections_output,
+    parse_services_output,
+    parse_ups_output,
+)
 from .privacy import REDACTED_HOST, host_fingerprint
 from .security.common import utc_now
 from .topology import parse_mdstat
@@ -245,6 +250,11 @@ def build_health_summary(sections, smart_report, temperature_report, host, ssh_p
         name: "complete" if isinstance(sections.get(name), str) and sections[name].strip() else "unavailable"
         for name in ("network", "disks")
     }
+    observations = {
+        "services": parse_services_output(sections.get("services", "")),
+        "ups": parse_ups_output(sections.get("ups", "")),
+        "connections": parse_connections_output(sections.get("connections", "")),
+    }
     risk_signals = []
     if raid["degraded_arrays"]:
         risk_signals.append(
@@ -302,6 +312,7 @@ def build_health_summary(sections, smart_report, temperature_report, host, ssh_p
             "raid": raid,
             "smart": smart,
             "temperature": temperature,
+            "observations": observations,
             "additional_sections": additional_sections,
         },
         "sections": sections,
@@ -344,6 +355,7 @@ def build_risk_signals_report(health_report):
                 "high_count": temperature["high_count"],
                 "high_sensors": temperature["high_sensors"],
             },
+            "observations": summary["observations"],
         },
     }
 

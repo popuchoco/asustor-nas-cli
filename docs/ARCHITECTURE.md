@@ -7,7 +7,7 @@ The `adm` executable runs on an operator workstation. It connects to ADM over HT
 ```text
 adm CLI ── HTTPS ──> ADM portal
    │
-   └────── SSH ────> fixed read-only shell queries ──> /proc, /sys, df, ip, smartctl
+   └────── SSH ────> fixed read-only shell queries ──> /proc, /sys, df, ip, smartctl, upsc
                        │
                        └── guarded module lifecycle actions (Linux compatibility gate only)
 
@@ -28,7 +28,8 @@ MCP and ordinary inspection commands are read-only. MCP includes raw health obse
 | `cli_platform.py` | Guarded platform-module command flow |
 | `cli_smart.py` | Read-only SMART health command handler |
 | `cli_temperature.py` | Read-only thermal-zone temperature handler |
-| `summaries.py` | Parse optional system, storage, RAID, SMART, and thermal observations into derived summaries and risk signals |
+| `cli_observations.py` / `observations.py` | Allowlisted process counts, local NUT UPS values, and address-free TCP state summaries |
+| `summaries.py` | Parse system, storage, RAID, SMART, thermal, service, UPS, and connection observations into structured reports; only RAID/SMART/temperature create risk signals |
 | `client.py` | HTTPS probe and OpenSSH transport; no password storage |
 | `commands.py` | Fixed ADM/Linux query allowlist and section parser |
 | `topology.py` | Parse `/sys/block`, `/proc/mdstat`, and `/proc/mounts` observations |

@@ -63,8 +63,13 @@ class McpProtocolTests(unittest.TestCase):
 
         self.assertEqual(health["report_type"], "diagnostic-summary")
         self.assertEqual(health["sections"], sections)
+        self.assertEqual(
+            set(health["summary"]["observations"]),
+            {"services", "ups", "connections"},
+        )
         self.assertEqual(risk["report_type"], "risk-signals")
         self.assertNotIn("sections", risk)
+        self.assertEqual(risk["summary"]["observations"], health["summary"]["observations"])
         self.assertEqual(risk["summary"]["recommended_exit_code"], 2)
         self.assertEqual(
             {signal["code"] for signal in risk["summary"]["risk_signals"]},

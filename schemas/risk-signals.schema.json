@@ -75,7 +75,86 @@
             }
           },
           "additionalProperties": false
+        },
+        "observations": {
+          "type": "object",
+          "required": ["services", "ups", "connections"],
+          "properties": {
+            "services": {"$ref": "#/$defs/services"},
+            "ups": {"$ref": "#/$defs/ups"},
+            "connections": {"$ref": "#/$defs/connections"}
+          },
+          "additionalProperties": false
         }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "services": {
+      "type": "object",
+      "required": ["coverage", "processes", "note"],
+      "properties": {
+        "coverage": {"enum": ["complete", "partial", "unavailable"]},
+        "processes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "process_count"],
+            "properties": {
+              "name": {"enum": ["sshd", "httpd", "nginx", "smbd", "nmbd", "afpd", "avahi-daemon", "crond", "mysqld", "minidlna", "upsd", "upsmon"]},
+              "process_count": {"type": "integer", "minimum": 0}
+            },
+            "additionalProperties": false
+          }
+        },
+        "note": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "ups": {
+      "type": "object",
+      "required": ["coverage", "source", "device_count", "devices", "note"],
+      "properties": {
+        "coverage": {"enum": ["complete", "partial", "unavailable"]},
+        "source": {"enum": ["nut", null]},
+        "device_count": {"type": ["integer", "null"], "minimum": 0},
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["index", "status", "battery_charge_percent"],
+            "properties": {
+              "index": {"type": "integer", "minimum": 1},
+              "status": {"enum": ["online", "on_battery", "low_battery", "charging", "discharging", "other", "unavailable"]},
+              "battery_charge_percent": {"type": ["number", "null"], "minimum": 0, "maximum": 100}
+            },
+            "additionalProperties": false
+          }
+        },
+        "note": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "connections": {
+      "type": "object",
+      "required": ["coverage", "protocol", "ipv4", "ipv6", "note"],
+      "properties": {
+        "coverage": {"enum": ["complete", "partial", "unavailable"]},
+        "protocol": {"const": "TCP"},
+        "ipv4": {"$ref": "#/$defs/tcpCounts"},
+        "ipv6": {"$ref": "#/$defs/tcpCounts"},
+        "note": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "tcpCounts": {
+      "type": ["object", "null"],
+      "required": ["total", "established", "listening"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "established": {"type": "integer", "minimum": 0},
+        "listening": {"type": "integer", "minimum": 0}
       },
       "additionalProperties": false
     }

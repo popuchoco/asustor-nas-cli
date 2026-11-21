@@ -10,7 +10,12 @@ from types import SimpleNamespace
 
 from . import __version__
 from .client import CliError, inspect_adm_portal, run_ssh
-from .commands import DOCTOR_SECTIONS, build_remote_command, parse_sections
+from .commands import (
+    DOCTOR_SECTIONS,
+    HEALTH_OBSERVATION_SECTIONS,
+    build_remote_command,
+    parse_sections,
+)
 from .platform import build_status_command as build_platform_status_command
 from .platform import parse_platform_status
 from .privacy import REDACTED_HOST, host_fingerprint, redact_sensitive_text
@@ -252,7 +257,7 @@ def _collect_temperature_report(args):
 
 
 def _collect_health_summary(args, warning_celsius):
-    sections = _ssh_sections(args, DOCTOR_SECTIONS)
+    sections = _ssh_sections(args, (*DOCTOR_SECTIONS, *HEALTH_OBSERVATION_SECTIONS))
     return build_health_summary(
         sections,
         _collect_smart_report(args),
@@ -337,7 +342,7 @@ def call_tool(name, arguments=None):
 
     section_by_tool = {
         "adm_status": ("system",),
-        "adm_health": DOCTOR_SECTIONS,
+        "adm_health": (*DOCTOR_SECTIONS, *HEALTH_OBSERVATION_SECTIONS),
         "adm_storage": ("storage",),
         "adm_raid": ("raid",),
         "adm_network": ("network",),

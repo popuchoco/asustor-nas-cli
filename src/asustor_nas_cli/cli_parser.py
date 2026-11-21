@@ -122,7 +122,7 @@ def build_parser():
 
     health = commands.add_parser("health", help="collect read-only system and storage observations")
     add_common_arguments(health, needs_ssh=True)
-    health.add_argument("--summary", action="store_true", help="include structured RAID, SMART and temperature observations")
+    health.add_argument("--summary", action="store_true", help="include structured RAID, SMART, temperature, service, UPS and connection observations")
     health.add_argument("--exit-on-warning", action="store_true", help="return the summary's recommended nonzero exit code for warnings or incomplete coverage")
     health.add_argument("--temperature-warning-celsius", type=temperature_warning, default=DEFAULT_TEMPERATURE_WARNING_CELSIUS, help="advisory thermal-zone threshold in °C for `health --summary` (default: 80)")
 
@@ -134,6 +134,9 @@ def build_parser():
         ("disks", "list disks visible to ADM smartctl over SSH"),
         ("smart", "read SMART health status without starting drive tests"),
         ("temperature", "read sysfs temperature observations without applying health thresholds"),
+        ("services", "count allowlisted service processes without treating them as a health verdict"),
+        ("ups", "read local NUT UPS status and battery observations when available"),
+        ("connections", "count TCP connection states without displaying addresses or ports"),
         ("disk-topology", "map physical disks, Linux RAID members, and volume mounts"),
     ):
         command_parser = commands.add_parser(name, help=description)

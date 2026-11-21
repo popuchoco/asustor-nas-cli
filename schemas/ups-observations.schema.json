@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/ups-observations.schema.json",
+  "title": "ASUSTOR ADM local NUT UPS observations",
+  "type": "object",
+  "required": ["schema_version", "report_type", "generated_at", "host", "host_id", "ssh_port", "coverage", "source", "device_count", "devices", "note"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "ups-observations"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "host": {"const": "NAS"},
+    "host_id": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
+    "ssh_port": {"type": "integer", "minimum": 1, "maximum": 65535},
+    "coverage": {"enum": ["complete", "partial", "unavailable"]},
+    "source": {"enum": ["nut", null]},
+    "device_count": {"type": ["integer", "null"], "minimum": 0},
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["index", "status", "battery_charge_percent"],
+        "properties": {
+          "index": {"type": "integer", "minimum": 1},
+          "status": {"enum": ["online", "on_battery", "low_battery", "charging", "discharging", "other", "unavailable"]},
+          "battery_charge_percent": {"type": ["number", "null"], "minimum": 0, "maximum": 100}
+        },
+        "additionalProperties": false
+      }
+    },
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}

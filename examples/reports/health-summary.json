@@ -4,7 +4,7 @@
   "generated_at": "2026-11-21T00:00:00Z",
   "command": "health",
   "host": "NAS",
-  "host_id": "example-host-id",
+  "host_id": "0123456789abcdef",
   "ssh_port": 22,
   "summary": {
     "state": "observed",
@@ -81,6 +81,30 @@
       "high_count": 0,
       "high_sensors": []
     },
+    "observations": {
+      "services": {
+        "coverage": "complete",
+        "processes": [
+          {"name": "sshd", "process_count": 1},
+          {"name": "smbd", "process_count": 1}
+        ],
+        "note": "Synthetic allowlisted process counts; observation only."
+      },
+      "ups": {
+        "coverage": "unavailable",
+        "source": null,
+        "device_count": null,
+        "devices": [],
+        "note": "Synthetic example with no local NUT data."
+      },
+      "connections": {
+        "coverage": "complete",
+        "protocol": "TCP",
+        "ipv4": {"total": 9, "established": 2, "listening": 4},
+        "ipv6": {"total": 3, "established": 0, "listening": 2},
+        "note": "Synthetic state counts; no addresses are included."
+      }
+    },
     "additional_sections": {
       "network": "complete",
       "disks": "complete"
@@ -91,6 +115,9 @@
     "storage": "Filesystem Size Used Avail Use% Mounted on\n/dev/md0 2T 900G 1.1T 45% /volume1",
     "raid": "Personalities : [raid1]\nmd0 : active raid1 sda1[0] sdb1[1]\n      1953383488 blocks [2/2] [UU]\nunused devices: <none>",
     "network": "--- interfaces ---\neth0: UP",
-    "disks": "devices: /dev/sda /dev/sdb"
+    "disks": "devices: /dev/sda /dev/sdb",
+    "services": "allowlisted process counts only",
+    "ups": "NUT observations unavailable",
+    "connections": "TCP state counts only"
   }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0 — 2026-11-21
+
+- Add allowlisted `adm services`, local NUT `adm ups`, and address-free TCP `adm connections` observations.
+- Include those observations in health-summary and risk-signals reports without using them as health findings or changing the exit-code policy.
+- Record read-only AS-202TE smoke results for service-process counts, UPS availability, and TCP state counts; retain only redacted normalized values.
+
 ## 1.5.0 — 2026-11-21
 
 - Add offline `adm report compare` for diagnostic-summary and risk-signals history, including changed risk signals and structured fields.

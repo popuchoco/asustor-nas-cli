@@ -7,6 +7,12 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 from asustor_nas_cli.cli_support import print_json
+from asustor_nas_cli.commands import SERVICE_PROCESS_NAMES
+from asustor_nas_cli.observations import (
+    build_connections_report,
+    build_services_report,
+    build_ups_report,
+)
 from asustor_nas_cli.platform import (
     DRIVER_MODULES,
     parse_platform_status,
@@ -158,6 +164,21 @@ class PublishedSchemaTests(unittest.TestCase):
         ]
         risk_signals = build_risk_signals_report(diagnostic_summary)
         report_comparison = compare_health_reports(diagnostic_summary, diagnostic_summary)
+        service_output = "\n".join(
+            (
+                "__ADM_SERVICES_BEGIN__",
+                *(f"__ADM_SERVICE__={name}|1" for name in SERVICE_PROCESS_NAMES),
+                "__ADM_SERVICES_END__",
+            )
+        )
+        ups_output = (
+            "__ADM_UPS_BEGIN__\n__ADM_UPS_SOURCE__=nut\n__ADM_UPS_COUNT__=1\n"
+            "__ADM_UPS_DEVICE__=1|online|87.5\n__ADM_UPS_END__"
+        )
+        connections_output = (
+            "__ADM_CONNECTIONS_BEGIN__\n__ADM_TCP__=tcp|12|2|4\n"
+            "__ADM_TCP__=tcp6|5|1|3\n__ADM_CONNECTIONS_END__"
+        )
         operation = {
             "schema_version": 1,
             "report_type": "platform-module-operation",
@@ -187,6 +208,15 @@ class PublishedSchemaTests(unittest.TestCase):
             "security-audit": audit,
             "smart-health": smart,
             "temperature-observation": temperature,
+            "service-observations": build_services_report(
+                service_output, "NAS", 22, "0123456789abcdef"
+            ),
+            "ups-observations": build_ups_report(
+                ups_output, "NAS", 22, "0123456789abcdef"
+            ),
+            "connection-observations": build_connections_report(
+                connections_output, "NAS", 22, "0123456789abcdef"
+            ),
         }
         self.assertEqual(set(samples), set(SCHEMAS))
         for name, report in samples.items():

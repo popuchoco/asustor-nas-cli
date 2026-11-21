@@ -2,6 +2,21 @@
 
 import re
 
+SERVICE_PROCESS_NAMES = (
+    "sshd",
+    "httpd",
+    "nginx",
+    "smbd",
+    "nmbd",
+    "afpd",
+    "avahi-daemon",
+    "crond",
+    "mysqld",
+    "minidlna",
+    "upsd",
+    "upsmon",
+)
+
 READ_ONLY_COMMANDS = {
     "system": """printf 'hostname: '; hostname
 printf 'kernel: '; uname -srm
@@ -16,6 +31,88 @@ fi""",
     "network": """printf '%s\\n' '--- interfaces ---'; ip -o link show
 printf '%s\\n' '--- addresses ---'; ip -o addr show""",
     "disks": "smartctl --scan",
+    "services": (
+        "printf '%s\\n' '__ADM_SERVICES_BEGIN__'\nfor service in "
+        + " ".join(SERVICE_PROCESS_NAMES)
+        + """; do
+  count=0
+  for comm_file in /proc/[0-9]*/comm; do
+    [ -r "$comm_file" ] || continue
+    IFS= read -r proc_name < "$comm_file" || continue
+    [ "$proc_name" = "$service" ] && count=$((count + 1))
+  done
+  printf '__ADM_SERVICE__=%s|%s\\n' "$service" "$count"
+done
+printf '%s\\n' '__ADM_SERVICES_END__'"""
+    ),
+    "ups": """printf '%s\\n' '__ADM_UPS_BEGIN__'
+if ! command -v upsc >/dev/null 2>&1; then
+  printf '%s\\n' '__ADM_UPS_SOURCE__=none'
+  printf '%s\\n' '__ADM_UPS_UNAVAILABLE__=upsc_unavailable'
+else
+  printf '%s\\n' '__ADM_UPS_SOURCE__=nut'
+  ups_names=$(upsc -l localhost 2>/dev/null || true)
+  if [ -z "$ups_names" ]; then
+    printf '%s\\n' '__ADM_UPS_COUNT__=0'
+    printf '%s\\n' '__ADM_UPS_UNAVAILABLE__=server_or_device_unavailable'
+  else
+    ups_count=$(printf '%s\\n' "$ups_names" | sed '/^$/d' | wc -l | tr -d ' ')
+    printf '__ADM_UPS_COUNT__=%s\\n' "$ups_count"
+    ups_name=$(printf '%s\\n' "$ups_names" | sed -n "1p")
+    if [ -z "$ups_name" ]; then
+      printf '%s\\n' '__ADM_UPS_UNAVAILABLE__=unsafe_device_name'
+    else
+      case "$ups_name" in
+        *[!A-Za-z0-9_.-]*)
+          printf '%s\\n' '__ADM_UPS_UNAVAILABLE__=unsafe_device_name'
+          ;;
+        *)
+          ups_status=$(upsc "${ups_name}@localhost" ups.status 2>/dev/null || true)
+          if [ -z "$ups_status" ]; then
+            status=unavailable
+          else
+            case " $ups_status " in
+              *' LB '*) status=low_battery ;;
+              *' OB '*) status=on_battery ;;
+              *' OL '*) status=online ;;
+              *' CHRG '*) status=charging ;;
+              *' DISCHRG '*) status=discharging ;;
+              *) status=other ;;
+            esac
+          fi
+          charge=$(upsc "${ups_name}@localhost" battery.charge 2>/dev/null || true)
+          case "$charge" in
+            ''|*[!0-9.]*) charge=unavailable ;;
+          esac
+          printf '__ADM_UPS_DEVICE__=1|%s|%s\\n' "$status" "$charge"
+          ;;
+      esac
+    fi
+  fi
+fi
+printf '%s\\n' '__ADM_UPS_END__'""",
+    "connections": """printf '%s\\n' '__ADM_CONNECTIONS_BEGIN__'
+for table in tcp tcp6; do
+  table_path="/proc/net/$table"
+  if [ ! -r "$table_path" ]; then
+    printf '__ADM_TCP__=%s|unavailable|unavailable|unavailable\\n' "$table"
+    continue
+  fi
+  total=0
+  established=0
+  listening=0
+  while read slot local_address remote_address state remaining; do
+    [ "$slot" = 'sl' ] && continue
+    [ -n "$state" ] || continue
+    total=$((total + 1))
+    case "$state" in
+      01) established=$((established + 1)) ;;
+      0A) listening=$((listening + 1)) ;;
+    esac
+  done < "$table_path"
+  printf '__ADM_TCP__=%s|%s|%s|%s\\n' "$table" "$total" "$established" "$listening"
+done
+printf '%s\\n' '__ADM_CONNECTIONS_END__'""",
     "security": """if command -v netstat >/dev/null 2>&1; then
   netstat -lnt 2>/dev/null
 else
@@ -60,6 +157,7 @@ printf '%s\\n' '__ADM_MOUNTS_END__'""",
 }
 
 DOCTOR_SECTIONS = ("system", "storage", "raid", "network", "disks")
+HEALTH_OBSERVATION_SECTIONS = ("services", "ups", "connections")
 
 
 def build_remote_command(section_names):

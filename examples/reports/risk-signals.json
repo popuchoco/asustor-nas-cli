@@ -3,7 +3,7 @@
   "report_type": "risk-signals",
   "generated_at": "2026-11-21T00:00:00Z",
   "host": "NAS",
-  "host_id": "example-host-id",
+  "host_id": "0123456789abcdef",
   "ssh_port": 22,
   "summary": {
     "state": "attention",
@@ -53,6 +53,27 @@
           "celsius": 85.0
         }
       ]
+    },
+    "observations": {
+      "services": {
+        "coverage": "partial",
+        "processes": [{"name": "sshd", "process_count": 1}],
+        "note": "Synthetic allowlisted process count; observation only."
+      },
+      "ups": {
+        "coverage": "unavailable",
+        "source": null,
+        "device_count": null,
+        "devices": [],
+        "note": "Synthetic example with no local NUT data."
+      },
+      "connections": {
+        "coverage": "partial",
+        "protocol": "TCP",
+        "ipv4": {"total": 9, "established": 2, "listening": 4},
+        "ipv6": null,
+        "note": "Synthetic state counts; no addresses are included."
+      }
     }
   }
 }

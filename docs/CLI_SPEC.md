@@ -11,7 +11,7 @@
 - `--json` emits UTF-8 JSON for command results. Human output is for display and is not a stable parsing interface.
 - `report render --input FILE` reads a local schema-v1 `diagnostic-summary` or `risk-signals` JSON report (maximum 1 MB) and writes at most 2 MB of Markdown to stdout. `--input -` reads stdin. This offline command does not connect to a NAS, omits raw SSH `sections`, and redacts host labels, IP/MAC addresses, and account/secret fields.
 - `status`, `storage`, and `raid` accept `--summary` to add a structured `diagnostic-summary` while retaining the raw SSH section in `sections`. `raid` also accepts `--exit-on-warning` to return the summary's recommended code.
-- `health --summary` adds a structured summary for system, storage, RAID, SMART, and temperature observations while retaining the raw `health` sections. It also reports whether the raw network and disk-list sections were returned. SMART and thermal observations use the same fixed read-only SSH operations as their standalone commands.
+- `health --summary` adds structured system, storage, RAID, SMART, temperature, service-process, UPS, and TCP-state observations while retaining the raw sections. Service/process counts, UPS values, and connection counts do not create risk findings or affect the health exit-code policy. It also reports whether the raw network and disk-list sections were returned.
 - `health --summary --temperature-warning-celsius C` changes the generic temperature advisory threshold (default `80`). It is not a model-specific safe-temperature limit or health verdict.
 - `health --summary --exit-on-warning` returns `2` if a degraded RAID array, failed SMART state, or reading at/above the advisory temperature threshold is observed; otherwise it returns `1` for incomplete/unavailable coverage and `0` for complete observations without those signals. Without this option, successful collection returns `0` as before.
 - Structured `diagnostic-summary` and `risk-signals` reports include an optional UTC `generated_at` timestamp for offline history comparisons.
@@ -25,13 +25,16 @@
 | `probe` | HTTPS `/portal/`; read-only | `probe` |
 | `doctor` | HTTPS + SSH observations; read-only | `doctor` |
 | `status` | hostname, kernel, CPU, memory, uptime | `status` |
-| `health` | System, storage, RAID, network, smartctl device list; read-only. With `--summary`, also SMART and thermal-zone observations | `health` or `diagnostic-summary` |
+| `health` | System, storage, RAID, network, disk, allowlisted service, local NUT UPS, and TCP-state observations; read-only. With `--summary`, also structured SMART and thermal observations | `health` or `diagnostic-summary` |
 | `storage` | `df -hP` | `storage` |
 | `raid` | `/proc/mdstat` | `raid` |
 | `network` | `ip -o link/addr` | `network` |
 | `disks` | `smartctl --scan`; no SMART health | `disks` |
 | `smart` | `smartctl -H -n standby`; health only, no self-test or drive wake-up | `smart-health`, schema v1 |
 | `temperature` | Read `/sys/class/thermal/thermal_zone*/temp`; observations only, no threshold verdict | `temperature-observation`, schema v1 |
+| `services` | Count exact names from a fixed `/proc/*/comm` allowlist; no arguments or raw process command lines | `service-observations`, schema v1 |
+| `ups` | Query local NUT `upsc` for configured device count and the first device's standardized status/battery charge; names omitted, multiple devices yield partial coverage | `ups-observations`, schema v1 |
+| `connections` | Count total, established, and listening TCP sockets from `/proc/net/tcp*`; addresses omitted | `connection-observations`, schema v1 |
 | `disk-topology` | `/sys/block`, `/proc/mdstat`, `/proc/mounts` | `disk-topology`, schema v1 |
 | `security audit` | ADM portal version + local TCP listeners + operator assertions | `security-audit`, schema v1 |
 | `incident scan` | Bounded filename scan + ADM portal text | `incident-scan`, schema v1 |
@@ -42,6 +45,8 @@
 | `platform module --load/--unload/--reset` | Fixed `modprobe` operations after compatibility gate | `platform-module-operation`, schema v1 |
 
 The `diagnostic-summary` schema is versioned independently from the package release. Summary coverage describes the completeness of parsed observations. Missing SMART or temperature support is reported as incomplete/unavailable, not as a passing health check. Raw SSH sections remain available to support review of the derived summary.
+
+The `health --summary` and `risk-signals` reports include service, UPS, and TCP observations under `summary.observations`. These are not entries in the `risk_signals` array and do not alter the summary state or health exit-code policy. Each observation records its own coverage.
 
 `disk-topology` records device model and size but excludes serial numbers and SMART health. Array state reflects the kernel's md status output, not a full filesystem or drive-health assessment.
 
@@ -83,6 +88,9 @@ Schemas use JSON Schema Draft 2020-12 and are published under [`schemas/`](../sc
 - `platform-module-operation.schema.json`
 - `smart-health.schema.json`
 - `temperature-observation.schema.json`
+- `service-observations.schema.json`
+- `ups-observations.schema.json`
+- `connection-observations.schema.json`
 - `diagnostic-summary.schema.json`
 - `risk-signals.schema.json`
 

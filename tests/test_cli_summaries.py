@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from asustor_nas_cli.cli import run_health
 from asustor_nas_cli.cli_parser import build_parser
+from asustor_nas_cli.commands import DOCTOR_SECTIONS, HEALTH_OBSERVATION_SECTIONS
 from asustor_nas_cli.smart_health import parse_smart_health_output
 from asustor_nas_cli.temperature import parse_temperature_output
 
@@ -69,7 +70,7 @@ class SummaryCliTests(unittest.TestCase):
         )
         output = io.StringIO()
         with (
-            patch("asustor_nas_cli.cli.run_ssh_sections", return_value=sections),
+            patch("asustor_nas_cli.cli.run_ssh_sections", return_value=sections) as collect_sections,
             patch("asustor_nas_cli.cli.collect_smart_health", return_value=(smart, None)),
             patch("asustor_nas_cli.cli.collect_temperature", return_value=(temperature, None)),
             redirect_stdout(output),
@@ -80,7 +81,14 @@ class SummaryCliTests(unittest.TestCase):
         self.assertEqual(exit_code, 2)
         self.assertEqual(report["summary"]["recommended_exit_code"], 2)
         self.assertEqual(report["summary"]["smart"]["failed_devices"], ["sda"])
+        self.assertEqual(
+            set(report["summary"]["observations"]),
+            {"services", "ups", "connections"},
+        )
         self.assertEqual(report["sections"], sections)
+        collect_sections.assert_called_once_with(
+            args, (*DOCTOR_SECTIONS, *HEALTH_OBSERVATION_SECTIONS)
+        )
 
 
 if __name__ == "__main__":

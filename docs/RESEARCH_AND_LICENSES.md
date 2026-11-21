@@ -12,6 +12,7 @@ The original code and documentation in this repository are licensed under MIT. S
 | --- | --- | --- |
 | Python standard library | Runtime implementation | Python Software Foundation License; included with the user's Python distribution |
 | OpenSSH client | Executes the fixed read-only ADM/Linux commands and guarded module commands | Supplied by the operating system; not bundled |
+| Network UPS Tools (`upsc`) | Optional read-only local UPS status and battery observations for `adm ups` | NUT is primarily GPL-2.0-or-later with some files under other licenses; see the upstream [`COPYING`](https://github.com/networkupstools/nut/blob/master/COPYING). This project invokes the ADM-provided client and does not bundle NUT |
 | `jsonschema` | Optional test extra for validating published JSON Schemas | MIT; see the [upstream license](https://github.com/python-jsonschema/jsonschema/blob/main/COPYING); not a runtime dependency |
 | [asustor-platform-driver](https://github.com/mafredri/asustor-platform-driver) | The guarded `adm platform module` feature manages this driver's fixed module family and checks its published kernel/DMI compatibility boundary | GNU GPL v3 upstream; see its [LICENSE](https://github.com/mafredri/asustor-platform-driver/blob/main/LICENSE). No driver source or binary is copied or bundled |
 

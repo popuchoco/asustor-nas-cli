@@ -9,6 +9,7 @@ Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt
 ## What it does
 
 - Runs fixed, read-only SSH commands for ADM system, storage, RAID, network, and disk observations.
+- Counts allowlisted service processes, reads local NUT UPS status when available, and summarizes IPv4/IPv6 TCP states without exposing addresses or ports; these are observations, not health verdicts.
 - Reads SMART health status without starting self-tests; standby drives are left unqueried.
 - Reads available Linux thermal-zone temperatures as observations, without applying model-specific health thresholds.
 - Maps physical disks, partitions, Linux software RAID arrays, and `/volumeN` mounts through `/sys` and `/proc`.
@@ -65,6 +66,9 @@ CLI JSON and MCP responses label the device as `NAS` and include a stable `host_
 | `adm disk-topology` | Map disks, partitions, md arrays, and volumes |
 | `adm smart` | Read SMART health status without starting self-tests |
 | `adm temperature` | Read available thermal-zone temperatures; no health thresholds are applied |
+| `adm services` | Count a fixed set of service processes; does not judge whether a service should be running |
+| `adm ups` | Read the first local NUT UPS status and battery charge; multiple devices produce partial coverage and names are omitted |
+| `adm connections` | Count IPv4/IPv6 TCP connection states without showing addresses or ports |
 | `adm security audit` | Review the DeadBolt prevention baseline |
 | `adm incident scan` | Search volume filenames and portal text for bounded DeadBolt indicators |
 | `adm security compare` | Compare two compatible audit or scan JSON reports |
@@ -80,7 +84,7 @@ All NAS observation commands support `--json`. JSON reports use `schema_version:
 
 Render a structured report with `adm report render --input health.json`; use `--input -` to read JSON from standard input. It accepts version-1 `diagnostic-summary` and `risk-signals` reports up to 1 MB, writes at most 2 MB of Markdown to stdout, and never connects to the NAS. Raw SSH `sections` are omitted. Host labels, IP/MAC addresses, and fields named for accounts or secrets are redacted; review remaining operational details before sharing.
 
-`--summary` adds a versioned `diagnostic-summary` JSON report and keeps the original command output in `sections`. `adm health --summary` also collects SMART and thermal-zone observations. Its default temperature warning is a generic, adjustable 80 °C advisory; sensor IDs do not identify a component, so this is not a model-specific thermal-health verdict. `--exit-on-warning` opts into the summary's recommended code: `2` for detected RAID/SMART/temperature findings, `1` for incomplete coverage, and `0` for complete observations without findings.
+`--summary` adds a versioned `diagnostic-summary` JSON report and keeps the original command output in `sections`. `adm health --summary` also collects SMART, thermal-zone, service-process, UPS, and TCP-state observations. Service counts, UPS values, and connection counts do not add risk findings or change the health exit-code policy. Its default temperature warning is a generic, adjustable 80 °C advisory; sensor IDs do not identify a component, so this is not a model-specific thermal-health verdict. `--exit-on-warning` opts into the summary's recommended code: `2` for detected RAID/SMART/temperature findings, `1` for incomplete coverage, and `0` for complete observations without findings.
 
 `adm smart` runs only `smartctl -H -n standby` for supported block-device names. It does not start SMART self-tests or include disk serials/attributes; sleeping drives may be reported as unknown. A live read-only smoke on the AS-202TE saw two supported devices, both with unknown health and partial coverage, so it does not establish drive health.
 

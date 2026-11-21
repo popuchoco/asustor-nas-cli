@@ -9,6 +9,7 @@
 ## 功能
 
 - 透過固定、唯讀的 SSH 指令查詢 ADM 系統、容量、RAID、網路和磁碟資訊。
+- 計算固定 allowlist 服務程序數、讀取可用的本機 NUT UPS 狀態，並彙整 IPv4／IPv6 TCP 狀態計數；不輸出位址或連接埠，也不把觀察值當成健康判決。
 - 讀取 SMART 健康狀態，不會啟動磁碟自我測試；待機磁碟會略過查詢。
 - 讀取 Linux thermal-zone 溫度觀察值；不套用機型專屬健康門檻。
 - 從 `/sys` 與 `/proc` 建立實體磁碟、分割區、Linux 軟體 RAID 和 `/volumeN` 掛載點的對應。
@@ -65,6 +66,9 @@ CLI JSON 和 MCP 回應會以 `NAS` 作為主機標籤，並提供穩定的 `hos
 | `adm disk-topology` | 對應磁碟、分割區、md 陣列與資料卷 |
 | `adm smart` | 讀取 SMART 健康狀態，不啟動磁碟自我測試 |
 | `adm temperature` | 讀取可用的 thermal-zone 溫度；不套用健康門檻 |
+| `adm services` | 計算固定服務程序數；不判斷服務是否應該執行 |
+| `adm ups` | 讀取本機第一台 NUT UPS 的狀態與電量；多台裝置時標記為 partial，並省略名稱 |
+| `adm connections` | 彙整 IPv4／IPv6 TCP 連線狀態，不顯示位址或連接埠 |
 | `adm security audit` | 檢視 DeadBolt 事前防護基線 |
 | `adm incident scan` | 有界限地搜尋資料卷檔名和管理頁 DeadBolt 線索 |
 | `adm security compare` | 比對相容的稽核或掃描 JSON 報告 |
@@ -80,7 +84,7 @@ NAS 資料查詢指令支援 `--json`。JSON 報告使用 `schema_version: 1`，
 
 使用 `adm report compare --before yesterday.json --after today.json` 離線比對健康摘要或風險訊號。前後報告必須來自相同主機且類型一致；指令會標示風險訊號和結構化欄位的變化。後次覆蓋不完整時，消失的觀察會標為「未重見」，不會當成已排除。
 
-`--summary` 會輸出版本化的 `diagnostic-summary` JSON，並保留原始指令內容在 `sections`。`adm health --summary` 也會唯讀收集 SMART 與溫度觀察；溫度警示預設採通用、可調整的 80°C 提醒值。thermal-zone 編號不會指出感測器所屬元件，因此不代表機型專屬的溫度健康判定。加上 `--exit-on-warning` 後，偵測到 RAID／SMART／溫度問題回傳 `2`，資料不完整回傳 `1`，完整且沒有警示回傳 `0`。
+`--summary` 會輸出版本化的 `diagnostic-summary` JSON，並保留原始指令內容在 `sections`。`adm health --summary` 也會唯讀收集 SMART、溫度、服務程序、UPS 與 TCP 狀態觀察。服務數、UPS 值和連線計數不會新增風險訊號，也不會改變健康摘要的退出碼政策。溫度警示預設採通用、可調整的 80°C 提醒值。thermal-zone 編號不會指出感測器所屬元件，因此不代表機型專屬的溫度健康判定。加上 `--exit-on-warning` 後，偵測到 RAID／SMART／溫度問題回傳 `2`，資料不完整回傳 `1`，完整且沒有警示回傳 `0`。
 
 `adm smart` 只對支援的區塊裝置名稱執行 `smartctl -H -n standby`，不會啟動 SMART 自我測試，也不輸出磁碟序號或屬性；待機磁碟可能回報未知。AS-202TE 唯讀實測看到兩個支援裝置，但健康狀態都未知、涵蓋範圍不完整，因此不能據此判定磁碟健康。
 
