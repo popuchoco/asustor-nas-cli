@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 — 2026-11-21
+
+- Add `adm report render` for offline Markdown export of schema-v1 diagnostic-summary and risk-signals reports, with 1 MB input and 2 MB output caps plus stdin support.
+- Omit raw SSH sections and redact host labels, IP/MAC addresses, and account/secret-named fields in the rendered output.
+- Document daily health-report export and add tests for unsupported, malformed, oversized, and Markdown-injection inputs.
+
 ## 1.3.0 — 2026-11-21
 
 - Make the DeadBolt firmware check explicit for ADM 4.1+ and 5.x; a pass means outside the affected list for AS-2022-008 only, not a current-security verdict.

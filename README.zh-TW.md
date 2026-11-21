@@ -12,7 +12,7 @@
 - 讀取 SMART 健康狀態，不會啟動磁碟自我測試；待機磁碟會略過查詢。
 - 讀取 Linux thermal-zone 溫度觀察值；不套用機型專屬健康門檻。
 - 從 `/sys` 與 `/proc` 建立實體磁碟、分割區、Linux 軟體 RAID 和 `/volumeN` 掛載點的對應。
-- 稽核 DeadBolt 防護基線、在有限時間與命中數內搜尋檔名及 ADM 管理頁線索，並比對 JSON 報告。
+- 稽核 DeadBolt 防護基線、在有限時間與命中數內搜尋檔名及 ADM 管理頁線索、比對 JSON 報告，並離線匯出結構化摘要為 Markdown。
 - 檢查 NAS 是否符合 `asustor-platform-driver` 的核心版本及硬體需求；符合條件時，可在建立本機狀態備份並完成明確確認後載入或卸載驅動模組。
 - 透過 stdio 提供無額外依賴、唯讀的 MCP 伺服器，包含結構化健康摘要與精簡風險訊號工具。
 
@@ -68,11 +68,14 @@ CLI JSON 和 MCP 回應會以 `NAS` 作為主機標籤，並提供穩定的 `hos
 | `adm security audit` | 檢視 DeadBolt 事前防護基線 |
 | `adm incident scan` | 有界限地搜尋資料卷檔名和管理頁 DeadBolt 線索 |
 | `adm security compare` | 比對相容的稽核或掃描 JSON 報告 |
+| `adm report render` | 離線將健康摘要或風險訊號 JSON 報告轉成 Markdown |
 | `adm platform status` | 讀取核心、DMI 和驅動模組狀態 |
 | `adm platform module --load/--unload/--reset` | 在通過驗證的 Linux 主機上管理驅動模組 |
 | `adm mcp` | 以 stdio 提供唯讀 MCP 工具 |
 
 NAS 資料查詢指令支援 `--json`。JSON 報告使用 `schema_version: 1`，規格位於 [`schemas/`](schemas/)。退出碼見[指令規格](docs/CLI_SPEC.md)。
+
+使用 `adm report render --input health.json` 轉換結構化報告；`--input -` 會從標準輸入讀取 JSON。指令只接受 1 MB 以內、schema v1 的 `diagnostic-summary` 和 `risk-signals` 報告，最多輸出 2 MB Markdown，不會連線 NAS，並省略原始 SSH `sections`。主機標籤、IP／MAC 位址，以及名稱含帳號或密鑰用途的欄位會遮蔽；分享前仍請檢查其他維運資訊。
 
 `--summary` 會輸出版本化的 `diagnostic-summary` JSON，並保留原始指令內容在 `sections`。`adm health --summary` 也會唯讀收集 SMART 與溫度觀察；溫度警示預設採通用、可調整的 80°C 提醒值。thermal-zone 編號不會指出感測器所屬元件，因此不代表機型專屬的溫度健康判定。加上 `--exit-on-warning` 後，偵測到 RAID／SMART／溫度問題回傳 `2`，資料不完整回傳 `1`，完整且沒有警示回傳 `0`。
 

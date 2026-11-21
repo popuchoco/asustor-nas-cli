@@ -193,6 +193,17 @@ def build_parser():
         help="maximum matching filenames to return (default: 100)",
     )
 
+    report = commands.add_parser("report", help="render supported saved reports offline")
+    report_commands = report.add_subparsers(dest="report_action", required=True)
+    report_render = report_commands.add_parser(
+        "render", help="render a structured JSON summary as Markdown"
+    )
+    report_render.add_argument(
+        "--input",
+        required=True,
+        help="diagnostic-summary or risk-signals JSON file, or '-' for stdin",
+    )
+
     commands.add_parser("mcp", help="run the read-only MCP server over stdio")
 
     platform = commands.add_parser("platform", help="inspect or guardedly manage supported ASUSTOR kernel modules")

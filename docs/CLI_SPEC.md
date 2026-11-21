@@ -9,6 +9,7 @@
 - SSH key path comes from `ASUSTOR_SSH_IDENTITY_FILE` or `--identity-file`.
 - HTTPS validation is enabled by default. `--ca` selects a PEM CA file; `--insecure` disables validation for that request. The options are mutually exclusive.
 - `--json` emits UTF-8 JSON for command results. Human output is for display and is not a stable parsing interface.
+- `report render --input FILE` reads a local schema-v1 `diagnostic-summary` or `risk-signals` JSON report (maximum 1 MB) and writes at most 2 MB of Markdown to stdout. `--input -` reads stdin. This offline command does not connect to a NAS, omits raw SSH `sections`, and redacts host labels, IP/MAC addresses, and account/secret fields.
 - `status`, `storage`, and `raid` accept `--summary` to add a structured `diagnostic-summary` while retaining the raw SSH section in `sections`. `raid` also accepts `--exit-on-warning` to return the summary's recommended code.
 - `health --summary` adds a structured summary for system, storage, RAID, SMART, and temperature observations while retaining the raw `health` sections. It also reports whether the raw network and disk-list sections were returned. SMART and thermal observations use the same fixed read-only SSH operations as their standalone commands.
 - `health --summary --temperature-warning-celsius C` changes the generic temperature advisory threshold (default `80`). It is not a model-specific safe-temperature limit or health verdict.
@@ -33,6 +34,7 @@
 | `security audit` | ADM portal version + local TCP listeners + operator assertions | `security-audit`, schema v1 |
 | `incident scan` | Bounded filename scan + ADM portal text | `incident-scan`, schema v1 |
 | `security compare` | Two saved audit/scan reports | `comparison`, schema v1 |
+| `report render` | Saved diagnostic-summary or risk-signals JSON; local and offline | Markdown text |
 | `platform status` | Kernel, DMI, module state; read-only | `platform-status`, schema v1 |
 | `platform module --load/--unload/--reset` | Fixed `modprobe` operations after compatibility gate | `platform-module-operation`, schema v1 |
 

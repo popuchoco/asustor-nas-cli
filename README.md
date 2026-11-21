@@ -12,7 +12,7 @@ Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt
 - Reads SMART health status without starting self-tests; standby drives are left unqueried.
 - Reads available Linux thermal-zone temperatures as observations, without applying model-specific health thresholds.
 - Maps physical disks, partitions, Linux software RAID arrays, and `/volumeN` mounts through `/sys` and `/proc`.
-- Audits a DeadBolt prevention baseline, scans a bounded set of filenames and ADM portal text for known indicators, and compares saved JSON reports.
+- Audits a DeadBolt prevention baseline, scans a bounded set of filenames and ADM portal text for known indicators, compares saved JSON reports, and renders structured summaries as Markdown offline.
 - Checks whether the host meets the kernel and hardware requirements for `asustor-platform-driver`; on supported Linux hosts, it can load or unload that driver family after creating a local state backup and completing explicit confirmation.
 - Offers a dependency-free, read-only MCP server over stdio, including structured health summaries and a concise risk-signals tool.
 
@@ -68,11 +68,14 @@ CLI JSON and MCP responses label the device as `NAS` and include a stable `host_
 | `adm security audit` | Review the DeadBolt prevention baseline |
 | `adm incident scan` | Search volume filenames and portal text for bounded DeadBolt indicators |
 | `adm security compare` | Compare two compatible audit or scan JSON reports |
+| `adm report render` | Render a saved health summary or risk-signals JSON report as Markdown, offline |
 | `adm platform status` | Read kernel, DMI, and platform-driver module state |
 | `adm platform module --load/--unload/--reset` | Guarded module lifecycle control on verified compatible Linux hosts |
 | `adm mcp` | Serve read-only MCP tools over stdio |
 
 All NAS observation commands support `--json`. JSON reports use `schema_version: 1`; supported report schemas are in [`schemas/`](schemas/). Command exit codes are documented in the [CLI specification](docs/CLI_SPEC.md).
+
+Render a structured report with `adm report render --input health.json`; use `--input -` to read JSON from standard input. It accepts version-1 `diagnostic-summary` and `risk-signals` reports up to 1 MB, writes at most 2 MB of Markdown to stdout, and never connects to the NAS. Raw SSH `sections` are omitted. Host labels, IP/MAC addresses, and fields named for accounts or secrets are redacted; review remaining operational details before sharing.
 
 `--summary` adds a versioned `diagnostic-summary` JSON report and keeps the original command output in `sections`. `adm health --summary` also collects SMART and thermal-zone observations. Its default temperature warning is a generic, adjustable 80 °C advisory; sensor IDs do not identify a component, so this is not a model-specific thermal-health verdict. `--exit-on-warning` opts into the summary's recommended code: `2` for detected RAID/SMART/temperature findings, `1` for incomplete coverage, and `0` for complete observations without findings.
 

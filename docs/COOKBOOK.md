@@ -28,6 +28,17 @@ The default temperature advisory is 80 °C and can be adjusted with `--temperatu
 
 For a quick single-area check, `adm status --summary`, `adm storage --summary`, and `adm raid --summary` preserve each raw section alongside its parsed fields. `adm raid --summary --exit-on-warning` returns a nonzero status when coverage is incomplete or an array is degraded.
 
+Export the structured result to a shareable Markdown summary without reconnecting to the NAS:
+
+```powershell
+adm health --host nas.example --user nas-user --summary --json > .\health.json
+$healthExitCode = $LASTEXITCODE
+adm report render --input .\health.json > .\health.md
+$renderExitCode = $LASTEXITCODE
+```
+
+The Markdown renderer accepts `diagnostic-summary` and `risk-signals` schema-v1 reports up to 1 MB and writes at most 2 MB. It omits raw SSH sections and redacts host labels, IP/MAC addresses, and account/secret fields. Review the remaining operational details before sharing the file.
+
 ## DeadBolt review and report comparison
 
 Save a prevention audit and a bounded indicator scan before changing settings or beginning incident response:

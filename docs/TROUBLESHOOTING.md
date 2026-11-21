@@ -51,3 +51,5 @@ If the error says privilege escalation is unavailable, verify `sudo -n` directly
 ## Sharing reports and support requests
 
 Before sharing output, review it for file paths, DMI model identifiers, IP addresses, account names, serial numbers, and other environment details. Never attach passwords, private keys, module backups, or unredacted incident artifacts to a public issue. Follow the reporting instructions in [SECURITY.md](../SECURITY.md).
+
+`adm report render --input FILE` accepts only schema-v1 `diagnostic-summary` and `risk-signals` reports up to 1 MB and writes at most 2 MB. If a regular `health --json` report is rejected, collect it with `adm health --summary --json`; the renderer intentionally omits raw SSH sections and does not support every report type.

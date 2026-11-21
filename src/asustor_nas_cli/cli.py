@@ -4,6 +4,7 @@ import sys
 
 from .cli_parser import build_parser, validate_user
 from .cli_platform import run_platform
+from .cli_report import run_report_render
 from .cli_security import run_incident_scan, run_security_audit, run_security_compare
 from .cli_smart import collect_smart_health, run_smart_health
 from .cli_support import print_json, run_ssh_sections
@@ -191,6 +192,8 @@ def main():
     args = parser.parse_args()
     if args.command == "security" and args.security_action == "compare":
         return run_security_compare(args)
+    if args.command == "report" and args.report_action == "render":
+        return run_report_render(args)
     if args.command == "mcp":
         from .mcp import serve
 
