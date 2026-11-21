@@ -14,6 +14,11 @@ fi""",
     "network": """printf '%s\\n' '--- interfaces ---'; ip -o link show
 printf '%s\\n' '--- addresses ---'; ip -o addr show""",
     "disks": "smartctl --scan",
+    "security": """if command -v netstat >/dev/null 2>&1; then
+  netstat -lnt 2>/dev/null
+else
+  printf '%s\\n' '__ADM_NETSTAT_UNAVAILABLE__'
+fi""",
 }
 
 DOCTOR_SECTIONS = ("system", "storage", "raid", "network", "disks")

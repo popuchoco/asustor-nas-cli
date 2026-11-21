@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "asustor-nas-cli"
-version = "0.1.0"
-description = "Read-only diagnostic CLI for ASUSTOR ADM NAS devices"
+version = "0.2.0"
+description = "Read-only diagnostics and ransomware checks for ASUSTOR ADM NAS devices"
 requires-python = ">=3.10"
 dependencies = []
 
