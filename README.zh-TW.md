@@ -84,7 +84,7 @@ NAS 資料查詢指令支援 `--json`。JSON 報告使用 `schema_version: 1`，
 
 ## DeadBolt 勒索病毒防範與檢測
 
-`adm security audit` 依 ASUSTOR DeadBolt 公告檢查 ADM 版本、檢視本機 TCP 監聽連接埠，以及搜尋 ADM 管理頁的有限字串線索。備份狀態、密碼強度、EZ-Connect 和路由器外部暴露情況無法自動驗證，會保持未知；人工確認旗標只代表操作者聲明。
+`adm security audit` 依 ASUSTOR 的 AS-2022-008 DeadBolt 公告檢查 ADM 版本、檢視本機 TCP 監聽連接埠，以及搜尋 ADM 管理頁的有限字串線索。該公告列出 ADM 3.5 與 4.0 為受影響分支；ADM 4.1 以上或 5.x 顯示通過，只代表該公告沒有列為受影響，不代表 NAS 已完整修補或使用最新韌體。請另查[最新 ASUSTOR 安全公告](https://www.asustor.com/zh-tw/security/security_advisory)與[ADM 發行資訊](https://www.asustor.com/zh-tw/service/release_notes)。備份狀態、密碼強度、EZ-Connect 和路由器外部暴露情況無法自動驗證，會保持未知；人工確認旗標只代表操作者聲明。
 
 `adm incident scan` 只搜尋 `/volumeN` 下檔名以 `.deadbolt` 結尾的檔案及管理頁文字，不會讀取檔案內容、不會隔離或刪除檔案，也不會停止服務。可用 `--max-seconds` 和 `--max-hits` 設定掃描上限。程式會從 `PATH` 尋找 `find`、`timeout` 和 `awk`，並先確認 `find -xdev` 可用；缺少安全限時掃描所需功能時，報告會將檔案掃描標示為不可用。掃描不完整時會明確標示；未發現線索不代表 NAS 沒有感染。
 

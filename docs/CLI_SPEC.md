@@ -40,6 +40,8 @@ The `diagnostic-summary` schema is versioned independently from the package rele
 
 `disk-topology` records device model and size but excludes serial numbers and SMART health. Array state reflects the kernel's md status output, not a full filesystem or drive-health assessment.
 
+The `firmware.deadbolt_patch` result is scoped to ASUSTOR advisory [AS-2022-008](https://www.asustor.com/en/security/security_advisory_detail?id=9). ADM 4.1+ and 5.x are not listed among that notice's affected branches, so the check reports them outside its scope. A pass does not mean the installed firmware is current or that other vulnerabilities are fixed; review the [current security advisories](https://www.asustor.com/en/security/security_advisory) and [ADM release notes](https://www.asustor.com/zh-tw/service/release_notes).
+
 ## Platform-module safety contract
 
 Commands:

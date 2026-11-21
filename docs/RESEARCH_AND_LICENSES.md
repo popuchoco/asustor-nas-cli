@@ -15,11 +15,23 @@ The original code and documentation in this repository are licensed under MIT. S
 | `jsonschema` | Optional test extra for validating published JSON Schemas | MIT; see the [upstream license](https://github.com/python-jsonschema/jsonschema/blob/main/COPYING); not a runtime dependency |
 | [asustor-platform-driver](https://github.com/mafredri/asustor-platform-driver) | The guarded `adm platform module` feature manages this driver's fixed module family and checks its published kernel/DMI compatibility boundary | GNU GPL v3 upstream; see its [LICENSE](https://github.com/mafredri/asustor-platform-driver/blob/main/LICENSE). No driver source or binary is copied or bundled |
 
+## CI and release actions actually used
+
+These external actions are invoked by the repository's workflows; none are bundled with the Python package.
+
+| Action | Workflow use | Upstream license |
+| --- | --- | --- |
+| [actions/checkout](https://github.com/actions/checkout) | Check out source for CI and release builds | MIT; [LICENSE](https://github.com/actions/checkout/blob/main/LICENSE) |
+| [actions/setup-python](https://github.com/actions/setup-python) | Select the tested Python and release-build versions | MIT; [LICENSE](https://github.com/actions/setup-python/blob/main/LICENSE) |
+| [astral-sh/ruff-action](https://github.com/astral-sh/ruff-action) | Run Ruff lint checks in CI | Apache-2.0; [LICENSE](https://github.com/astral-sh/ruff-action/blob/main/LICENSE) |
+| [actions/upload-artifact](https://github.com/actions/upload-artifact) and [actions/download-artifact](https://github.com/actions/download-artifact) | Transfer built distributions between release jobs | MIT; [upload LICENSE](https://github.com/actions/upload-artifact/blob/main/LICENSE), [download LICENSE](https://github.com/actions/download-artifact/blob/main/LICENSE) |
+| [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) | Optional manual OIDC publication job | BSD-3-Clause; [LICENSE](https://github.com/pypa/gh-action-pypi-publish/blob/v1.14.3/LICENSE.md) |
+
 ## Technical sources used
 
 | Source | Where it informs the project |
 | --- | --- |
-| [ASUSTOR DeadBolt security advisory](https://www.asustor.com/en/security/security_advisory_detail?id=9), [ADM release notes](https://www.asustor.com/zh-tw/service/release_notes), and [DeadBolt prevention guidance](https://www.asustor.com/zh-tw/knowledge/detail/?group_id=628&id=6) | The versioned, limited DeadBolt audit and its operator guidance |
+| [ASUSTOR DeadBolt security advisory](https://www.asustor.com/en/security/security_advisory_detail?id=9), [current security advisory index](https://www.asustor.com/zh-tw/security/security_advisory), [ADM release notes](https://www.asustor.com/zh-tw/service/release_notes), and [DeadBolt prevention guidance](https://www.asustor.com/zh-tw/knowledge/detail/?group_id=628&id=6) | The versioned DeadBolt-only audit, its limited affected-branch interpretation, and operator guidance; other advisories are not automatically checked |
 | [Linux thermal sysfs ABI](https://github.com/torvalds/linux/blob/master/Documentation/ABI/testing/sysfs-class-thermal) and [thermal sysfs API documentation](https://docs.kernel.org/driver-api/thermal/sysfs-api.html) | The read-only `/sys/class/thermal/thermal_zone*/temp` observation command |
 | [PyPI Trusted Publisher documentation](https://docs.pypi.org/trusted-publishers/using-a-publisher/) | The optional OIDC package-publishing workflow |
 

@@ -72,13 +72,15 @@ def _firmware_check(adm_version):
                 )
             else:
                 status = "pass"
-                evidence = f"{adm_version} 高於公告所列 ADM 4.0 修補版 4.0.5.RUE3。"
-        elif major > 4 or (major, minor) >= (4, 1):
+                evidence = f"{adm_version} 高於 AS-2022-008 所列 ADM 4.0 修補版 4.0.5.RUE3。"
+        elif (major == 4 and minor >= 1) or major == 5:
             status = "pass"
             evidence = (
                 f"AS-2022-008 僅列 ADM 3.5 與 4.0 為受影響產品；"
-                f"{adm_version} 不在該公告列出的受影響分支。"
+                f"{adm_version} 不在此 DeadBolt 公告列出的分支。"
             )
+        if status == "pass":
+            evidence += " 此結果僅涵蓋 AS-2022-008；不代表韌體已是最新版本或其他安全公告均已修正。"
 
     return _check(
         "firmware.deadbolt_patch",

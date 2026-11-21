@@ -67,6 +67,37 @@ class SecurityReportTests(unittest.TestCase):
         self.assertEqual(check["status"], "pass")
         self.assertIn("release_notes", check["sources"][1])
 
+    def test_adm_4x_and_5x_are_scoped_to_the_deadbolt_advisory(self):
+        versions = (
+            "4.0.7.RVG1",
+            "4.1.0.RLQ1",
+            "4.2.6.RPI1",
+            "4.3.3.RY62",
+            "5.0.0.RE71",
+            "5.1.4.RM62",
+        )
+        for version in versions:
+            with self.subTest(version=version):
+                portal = {**PORTAL_VERIFIED, "adm_version": version}
+                report = build_security_audit(HOST, 22, "", portal)
+                check = next(item for item in report["checks"] if item["id"] == "firmware.deadbolt_patch")
+                self.assertEqual(check["status"], "pass")
+                self.assertIn("AS-2022-008", check["evidence"])
+                self.assertIn("不代表韌體已是最新版本", check["evidence"])
+
+    def test_unreviewed_major_branch_is_not_assumed_to_be_covered(self):
+        portal = {**PORTAL_VERIFIED, "adm_version": "6.0.0.RA00"}
+        report = build_security_audit(HOST, 22, "", portal)
+        check = next(item for item in report["checks"] if item["id"] == "firmware.deadbolt_patch")
+        self.assertEqual(check["status"], "unknown")
+
+    def test_unverified_adm_4_0_5_build_is_not_ordered_lexically(self):
+        portal = {**PORTAL_VERIFIED, "adm_version": "4.0.5.RZZ9"}
+        report = build_security_audit(HOST, 22, "", portal)
+        check = next(item for item in report["checks"] if item["id"] == "firmware.deadbolt_patch")
+        self.assertEqual(check["status"], "unknown")
+        self.assertIn("build 標記尚未核實", check["evidence"])
+
     def test_unknown_build_is_not_ordered_lexically(self):
         portal = {**PORTAL_VERIFIED, "adm_version": "3.5.9.RZZ9"}
         report = build_security_audit(HOST, 22, "", portal)

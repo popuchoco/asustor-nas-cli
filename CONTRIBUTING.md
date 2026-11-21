@@ -19,7 +19,7 @@ Do not run mutating platform-module commands on a production NAS as part of ordi
 - Keep remote commands fixed and allowlisted; never interpolate arbitrary shell input.
 - Preserve the read-only MCP contract.
 - Add or update report schemas and `docs/CLI_SPEC.md` when output contracts change.
-- Update `docs/COMPATIBILITY.md` only for models/versions actually verified by this CLI; label reference-only evidence.
+- Update `docs/COMPATIBILITY.md` only for models/versions actually verified by this CLI. Keep design-only comparisons in `docs/REFERENCE_REVIEW.md`.
 - Add a dated changelog entry for every user-visible change using `## X.Y.Z — YYYY-MM-DD`; include behavior, safety, and compatibility effects.
 - Update the English and Traditional Chinese README files and `docs/TROUBLESHOOTING.md` for user-facing changes.
 - Describe risks and recovery behavior for any new hardware mutation.

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 — 2026-11-21
+
+- Make the DeadBolt firmware check explicit for ADM 4.1+ and 5.x; a pass means outside the affected list for AS-2022-008 only, not a current-security verdict.
+- Add branch-coverage tests for ADM 4.0, 4.1–4.3, and 5.x, while keeping unknown build identifiers unranked.
+- Add SSH timeout, login, SMART permission, and module-privilege troubleshooting guidance.
+- Update artifact workflow actions and pin the optional PyPI publisher to its current release; record only the workflow actions actually used in the license inventory.
+- No additional live NAS fixture was available; the Linux 6.1+ path remains an accepted, unvalidated limitation.
+
 ## 1.2.0 — 2026-11-21
 
 - Add read-only MCP tools for structured health summaries and concise RAID/SMART/temperature risk signals.

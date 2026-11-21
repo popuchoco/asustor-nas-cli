@@ -8,7 +8,6 @@
 | ASUSTOR AS-202TE SMART health command | Live read-only smoke | Two supported block devices were observed; both health states were unknown and coverage was partial. No self-tests were started |
 | ASUSTOR AS-202TE temperature command | Live read-only smoke | No thermal-zone sensors were exposed; coverage was unavailable |
 | ASUSTOR AS-202TE platform-module operations | Compatibility-gate evaluation | Refused: Linux 3.4 is below the driver project's Linux 6.1 floor; AS-202TE is not in its hardware allowlist |
-| ASUSTOR AS5402T, ADM 5.1.4 | Reference-project report only | Not tested by this CLI |
 | Other ASUSTOR models / ADM releases | None | Not yet verified |
 
 CI also tests package installation and the `adm --version` entry point on Windows and macOS (Python 3.10 and 3.13). This validates workstation packaging only; it does not claim live NAS compatibility on those operating systems.
@@ -32,6 +31,6 @@ Passing the preflight is not a guarantee that GPIO mappings are correct or that 
 
 The current AS-202TE test NAS reports Linux 3.4.26. It is not a supported target for this control path; the CLI permits status inspection only and refuses load/unload/reset operations on it.
 
-## Reference-project coverage is not CLI support
+## DeadBolt version-check scope
 
-The reference MCP project reports testing on AS5402T with ADM 5.1.4. This helps identify a possible future test platform, but does not transfer its ADM-version or model support to this CLI. See the [reference review](REFERENCE_REVIEW.md).
+The firmware check follows ASUSTOR advisory [AS-2022-008](https://www.asustor.com/en/security/security_advisory_detail?id=9), whose affected-product list names ADM 3.5 and ADM 4.0 and gives fixed releases 3.5.9.RUE3 and 4.0.5.RUE3. The CLI also recognizes the ADM 3.5.9.RWM1 release-note entry that explicitly reports the DeadBolt fix. ADM 4.1+ and ADM 5.x are outside that advisory's affected list; a `pass` for those versions is limited to this one notice. It is not a statement that the NAS is current or unaffected by other advisories. Check ASUSTOR's [current advisory list](https://www.asustor.com/en/security/security_advisory) and [release notes](https://www.asustor.com/zh-tw/service/release_notes).
