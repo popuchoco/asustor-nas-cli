@@ -76,6 +76,7 @@ Schemas use JSON Schema Draft 2020-12 and are published under [`schemas/`](../sc
 - `smart-health.schema.json`
 - `temperature-observation.schema.json`
 - `diagnostic-summary.schema.json`
+- `risk-signals.schema.json`
 
 For each schema version, required field meaning is stable. Parsers should ignore unknown optional fields. `schema_version` is an integer, not the CLI package version.
 
@@ -99,8 +100,10 @@ Structured diagnostic summaries normally return `0` after successful collection.
 
 ## MCP interface
 
-`adm mcp` implements JSON-RPC 2.0 over stdio and uses the same read-only observation functions. It advertises read-only tool annotations. Tools include `adm_status`, `adm_health`, `adm_storage`, `adm_raid`, `adm_network`, `adm_disks`, `adm_smart`, `adm_temperature`, `adm_disk_topology`, `adm_platform_status`, `adm_security_audit`, `adm_security_compare`, and `adm_incident_scan`.
+`adm mcp` implements JSON-RPC 2.0 over stdio and uses the same read-only observation functions. It advertises read-only tool annotations. Tools include `adm_status`, `adm_health`, `adm_health_summary`, `adm_risk_signals`, `adm_storage`, `adm_raid`, `adm_network`, `adm_disks`, `adm_smart`, `adm_temperature`, `adm_disk_topology`, `adm_platform_status`, `adm_security_audit`, `adm_security_compare`, and `adm_incident_scan`.
 
-`adm_security_compare` accepts two JSON report objects (security audit or incident scan, schema version 1), enforces a 1 MB limit per report, and does not connect to the NAS or access local files. `adm_smart` and `adm_temperature` use fixed read-only SSH commands. Temperature sensors may be unavailable on older kernels or models.
+`adm_health_summary` returns the `diagnostic-summary` report and preserves its raw sections. `adm_risk_signals` returns the `risk-signals` schema with coverage and concise RAID, SMART, and thermal details, without raw sections. Both accept an optional `temperature_warning_celsius` number from 1 to 150; the default 80 °C value is a generic advisory, not a model-specific safe limit. Unknown or unavailable sensors do not count as healthy.
+
+`adm_security_compare` accepts two JSON report objects (security audit or incident scan, schema version 1), enforces a 1 MB limit per report, and does not connect to the NAS or access local files. Its text output names new observations, status changes, and items not reobserved during incomplete scans; absence from a later report is not proof that a threat was cleared. `adm_smart` and `adm_temperature` use fixed read-only SSH commands. Temperature sensors may be unavailable on older kernels or models. Redacted synthetic report examples are in [`examples/reports/`](../examples/reports/README.md).
 
 MCP configuration is supplied only through environment variables: `ASUSTOR_HOST`, `ASUSTOR_USER`, `ASUSTOR_SSH_PORT`, `ASUSTOR_HTTPS_PORT`, `ASUSTOR_TIMEOUT`, `ASUSTOR_SSH_IDENTITY_FILE`, `ASUSTOR_CA`, and `ASUSTOR_INSECURE`. MCP SSH uses batch mode; configure an SSH key/agent before launching the server. Mutating module operations are intentionally absent from MCP.

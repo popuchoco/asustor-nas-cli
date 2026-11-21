@@ -5,6 +5,8 @@ import re
 from .privacy import REDACTED_HOST, host_fingerprint
 from .topology import parse_mdstat
 
+DEFAULT_TEMPERATURE_WARNING_CELSIUS = 80.0
+
 
 def parse_system_summary(output):
     fields = {}
@@ -121,26 +123,28 @@ def parse_raid_summary(output):
 def _smart_observation(report):
     summary = report.get("summary", {}) if isinstance(report, dict) else {}
     devices = report.get("devices", []) if isinstance(report, dict) else []
+    failed_devices = [
+        device.get("device")
+        for device in devices
+        if isinstance(device, dict)
+        and isinstance(device.get("device"), str)
+        and device.get("health") == "failed"
+    ]
+    unknown_devices = [
+        device.get("device")
+        for device in devices
+        if isinstance(device, dict)
+        and isinstance(device.get("device"), str)
+        and (device.get("health") == "unknown" or (device.get("health") != "failed" and device.get("tool_exit_code") != 0))
+    ]
     return {
         "coverage": report.get("coverage", "unavailable") if isinstance(report, dict) else "unavailable",
         "state": summary.get("state", "unknown"),
         "device_count": summary.get("device_count", 0),
         "failed_count": summary.get("failed_count", 0),
-        "unknown_count": summary.get("unknown_count", 0),
-        "failed_devices": [
-            device.get("device")
-            for device in devices
-            if isinstance(device, dict)
-            and isinstance(device.get("device"), str)
-            and device.get("health") == "failed"
-        ],
-        "unknown_devices": [
-            device.get("device")
-            for device in devices
-            if isinstance(device, dict)
-            and isinstance(device.get("device"), str)
-            and (device.get("health") == "unknown" or device.get("tool_exit_code") != 0)
-        ],
+        "unknown_count": len(unknown_devices),
+        "failed_devices": failed_devices,
+        "unknown_devices": unknown_devices,
     }
 
 
@@ -298,6 +302,45 @@ def build_health_summary(sections, smart_report, temperature_report, host, ssh_p
             "additional_sections": additional_sections,
         },
         "sections": sections,
+    }
+
+
+def build_risk_signals_report(health_report):
+    summary = health_report["summary"]
+    raid = summary["raid"]
+    smart = summary["smart"]
+    temperature = summary["temperature"]
+    return {
+        "schema_version": 1,
+        "report_type": "risk-signals",
+        "host": health_report["host"],
+        "host_id": health_report["host_id"],
+        "ssh_port": health_report["ssh_port"],
+        "summary": {
+            "state": summary["state"],
+            "coverage": summary["coverage"],
+            "risk_signals": summary["risk_signals"],
+            "recommended_exit_code": summary["recommended_exit_code"],
+            "raid": {
+                "state": raid["state"],
+                "coverage": raid["coverage"],
+                "degraded_arrays": raid["degraded_arrays"],
+            },
+            "smart": {
+                "coverage": smart["coverage"],
+                "state": smart["state"],
+                "failed_count": smart["failed_count"],
+                "failed_devices": smart["failed_devices"],
+                "unknown_count": smart["unknown_count"],
+                "unknown_devices": smart["unknown_devices"],
+            },
+            "temperature": {
+                "coverage": temperature["coverage"],
+                "warning_threshold_celsius": temperature["warning_threshold_celsius"],
+                "high_count": temperature["high_count"],
+                "high_sensors": temperature["high_sensors"],
+            },
+        },
     }
 
 

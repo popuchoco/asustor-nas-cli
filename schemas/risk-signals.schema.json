@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/risk-signals.schema.json",
+  "title": "ASUSTOR ADM risk signals",
+  "type": "object",
+  "required": ["schema_version", "report_type", "host", "host_id", "ssh_port", "summary"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "risk-signals"},
+    "host": {"type": ["string", "null"]},
+    "host_id": {"type": ["string", "null"]},
+    "ssh_port": {"type": ["integer", "null"]},
+    "summary": {
+      "type": "object",
+      "required": ["state", "coverage", "risk_signals", "recommended_exit_code", "raid", "smart", "temperature"],
+      "properties": {
+        "state": {"enum": ["observed", "attention", "unknown"]},
+        "coverage": {"enum": ["complete", "partial", "unavailable"]},
+        "recommended_exit_code": {"enum": [0, 1, 2]},
+        "risk_signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["code", "severity", "message"],
+            "properties": {
+              "code": {"enum": ["raid_degraded", "smart_failed", "temperature_high"]},
+              "severity": {"enum": ["warning", "critical"]},
+              "message": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "raid": {
+          "type": "object",
+          "required": ["state", "coverage", "degraded_arrays"],
+          "properties": {
+            "state": {"enum": ["degraded", "unknown", "observed", "no_arrays"]},
+            "coverage": {"enum": ["complete", "partial", "unavailable"]},
+            "degraded_arrays": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "smart": {
+          "type": "object",
+          "required": ["coverage", "state", "failed_count", "failed_devices", "unknown_count", "unknown_devices"],
+          "properties": {
+            "coverage": {"enum": ["complete", "partial", "unavailable"]},
+            "state": {"enum": ["passed", "failed", "unknown"]},
+            "failed_count": {"type": "integer", "minimum": 0},
+            "failed_devices": {"type": "array", "items": {"type": "string", "pattern": "^(sd[a-z]+|nvme[0-9]+n[0-9]+)$"}},
+            "unknown_count": {"type": "integer", "minimum": 0},
+            "unknown_devices": {"type": "array", "items": {"type": "string", "pattern": "^(sd[a-z]+|nvme[0-9]+n[0-9]+)$"}}
+          },
+          "additionalProperties": false
+        },
+        "temperature": {
+          "type": "object",
+          "required": ["coverage", "warning_threshold_celsius", "high_count", "high_sensors"],
+          "properties": {
+            "coverage": {"enum": ["complete", "partial", "unavailable"]},
+            "warning_threshold_celsius": {"type": "number", "minimum": 1, "maximum": 150},
+            "high_count": {"type": "integer", "minimum": 0},
+            "high_sensors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["sensor", "celsius"],
+                "properties": {
+                  "sensor": {"type": "string", "pattern": "^thermal_zone[0-9]+$"},
+                  "celsius": {"type": "number"}
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -2,6 +2,7 @@
 
 import ipaddress
 import json
+import math
 import os
 import re
 import sys
@@ -20,6 +21,11 @@ from .security import (
     compare_reports,
 )
 from .smart_health import build_smart_health_command, parse_smart_health_output
+from .summaries import (
+    DEFAULT_TEMPERATURE_WARNING_CELSIUS,
+    build_health_summary,
+    build_risk_signals_report,
+)
 from .temperature import build_temperature_command, parse_temperature_output
 from .topology import parse_disk_topology
 
@@ -33,6 +39,7 @@ READ_ONLY = {
 INSTRUCTIONS = (
     "Read-only tools for one ASUSTOR ADM NAS. SSH commands are fixed and allow-listed. "
     "No tool changes NAS data or services. Temperature readings are observations, not health verdicts. "
+    "Health summaries include coverage and generic configurable thermal advisories; unknown is not a clean bill of health. "
     "Report comparison accepts bounded report objects and does not connect to the NAS. "
     "File-name IOC scans are bounded and are not proof of no infection."
 )
@@ -67,10 +74,23 @@ COMPARE_ARGUMENTS = _object(
     },
     required=("before", "after"),
 )
+HEALTH_SUMMARY_ARGUMENTS = _object(
+    {
+        "temperature_warning_celsius": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 150,
+            "default": DEFAULT_TEMPERATURE_WARNING_CELSIUS,
+            "description": "Generic advisory threshold, not a model-specific safety limit.",
+        }
+    }
+)
 
 TOOLS = [
     {"name": "adm_status", "description": "Read system, CPU, memory and uptime observations over fixed SSH commands.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_health", "description": "Collect system, storage, RAID, network and disk observations; raw output is not a health guarantee.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
+    {"name": "adm_health_summary", "description": "Return a structured health summary with raw diagnostic sections, SMART/temperature observations, and explicit coverage.", "inputSchema": HEALTH_SUMMARY_ARGUMENTS, "annotations": READ_ONLY},
+    {"name": "adm_risk_signals", "description": "Return degraded RAID, failed SMART, high-temperature signals, and coverage without raw sections; unavailable observations remain unknown.", "inputSchema": HEALTH_SUMMARY_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_storage", "description": "Read mounted filesystem capacity.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_raid", "description": "Read Linux software RAID status from /proc/mdstat.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_network", "description": "Read network interface and address observations.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
@@ -172,6 +192,78 @@ def _portal(args):
         return None, redact_sensitive_text(error, args.host, args.user)
 
 
+def _collect_smart_report(args):
+    try:
+        output = run_ssh(
+            args.host,
+            args.user,
+            args.port,
+            build_smart_health_command(),
+            max(args.timeout, 60),
+            identity_file=args.identity_file,
+            batch=True,
+        )
+        return parse_smart_health_output(
+            output,
+            host=REDACTED_HOST,
+            ssh_port=args.port,
+            host_id=host_fingerprint(args.host),
+        )
+    except CliError as error:
+        report = parse_smart_health_output(
+            "",
+            host=REDACTED_HOST,
+            ssh_port=args.port,
+            host_id=host_fingerprint(args.host),
+        )
+        report["coverage"] = "unavailable"
+        report["tool_error"] = "ssh_unavailable"
+        report["notes"].append(redact_sensitive_text(error, args.host, args.user))
+        return report
+
+
+def _collect_temperature_report(args):
+    try:
+        output = run_ssh(
+            args.host,
+            args.user,
+            args.port,
+            build_temperature_command(),
+            args.timeout,
+            identity_file=args.identity_file,
+            batch=True,
+        )
+        return parse_temperature_output(
+            output,
+            host=REDACTED_HOST,
+            ssh_port=args.port,
+            host_id=host_fingerprint(args.host),
+        )
+    except CliError as error:
+        report = parse_temperature_output(
+            "",
+            host=REDACTED_HOST,
+            ssh_port=args.port,
+            host_id=host_fingerprint(args.host),
+        )
+        report["coverage"] = "unavailable"
+        report["notes"].append(redact_sensitive_text(error, args.host, args.user))
+        return report
+
+
+def _collect_health_summary(args, warning_celsius):
+    sections = _ssh_sections(args, DOCTOR_SECTIONS)
+    return build_health_summary(
+        sections,
+        _collect_smart_report(args),
+        _collect_temperature_report(args),
+        host=args.host,
+        ssh_port=args.port,
+        warning_celsius=warning_celsius,
+        host_id=host_fingerprint(args.host),
+    )
+
+
 def _validate_arguments(name, arguments):
     schemas = {tool["name"]: tool["inputSchema"] for tool in TOOLS}
     if name not in schemas:
@@ -220,6 +312,15 @@ def _validate_arguments(name, arguments):
                     raise McpError(f"{key} incident report is missing its scope")
                 if not isinstance(report.get("coverage"), dict):
                     raise McpError(f"{key} incident report is missing its coverage")
+    if name in {"adm_health_summary", "adm_risk_signals"}:
+        threshold = arguments.get("temperature_warning_celsius")
+        if threshold is not None and (
+            isinstance(threshold, bool)
+            or not isinstance(threshold, (int, float))
+            or not math.isfinite(threshold)
+            or not 1 <= threshold <= 150
+        ):
+            raise McpError("temperature_warning_celsius must be a number from 1 to 150")
 
 
 def call_tool(name, arguments=None):
@@ -228,6 +329,11 @@ def call_tool(name, arguments=None):
     if name == "adm_security_compare":
         return compare_reports(arguments["before"], arguments["after"])
     args = _settings()
+
+    if name in {"adm_health_summary", "adm_risk_signals"}:
+        threshold = arguments.get("temperature_warning_celsius", DEFAULT_TEMPERATURE_WARNING_CELSIUS)
+        report = _collect_health_summary(args, threshold)
+        return report if name == "adm_health_summary" else build_risk_signals_report(report)
 
     section_by_tool = {
         "adm_status": ("system",),
@@ -248,60 +354,9 @@ def call_tool(name, arguments=None):
             "sections": sections,
         }
     if name == "adm_smart":
-        try:
-            output = run_ssh(
-                args.host,
-                args.user,
-                args.port,
-                build_smart_health_command(),
-                max(args.timeout, 60),
-                identity_file=args.identity_file,
-                batch=True,
-            )
-            report = parse_smart_health_output(
-                output,
-                host=REDACTED_HOST,
-                ssh_port=args.port,
-                host_id=host_fingerprint(args.host),
-            )
-        except CliError as error:
-            report = parse_smart_health_output(
-                "",
-                host=REDACTED_HOST,
-                ssh_port=args.port,
-                host_id=host_fingerprint(args.host),
-            )
-            report["coverage"] = "unavailable"
-            report["tool_error"] = "ssh_unavailable"
-            report["notes"].append(redact_sensitive_text(error, args.host, args.user))
-        return report
+        return _collect_smart_report(args)
     if name == "adm_temperature":
-        try:
-            output = run_ssh(
-                args.host,
-                args.user,
-                args.port,
-                build_temperature_command(),
-                args.timeout,
-                identity_file=args.identity_file,
-                batch=True,
-            )
-            report = parse_temperature_output(
-                output,
-                host=REDACTED_HOST,
-                ssh_port=args.port,
-                host_id=host_fingerprint(args.host),
-            )
-        except CliError as error:
-            report = parse_temperature_output(
-                "",
-                host=REDACTED_HOST,
-                ssh_port=args.port,
-                host_id=host_fingerprint(args.host),
-            )
-            report["coverage"] = "unavailable"
-            report["notes"].append(redact_sensitive_text(error, args.host, args.user))
-        return report
+        return _collect_temperature_report(args)
     if name == "adm_disk_topology":
         sections = _ssh_sections(args, ("disk_topology",))
         report = parse_disk_topology(sections["disk_topology"], host=REDACTED_HOST)

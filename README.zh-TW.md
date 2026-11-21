@@ -4,7 +4,7 @@
 
 以 Python 撰寫的 ASUSTOR ADM NAS 安全優先命令列工具，提供唯讀診斷、磁碟拓樸、DeadBolt 勒索病毒防護檢查，以及有相容性閘門的核心模組管理。指令名稱為 `adm`，取自 ASUSTOR 作業系統名稱。
 
-[English](README.md) · [指令規格](docs/CLI_SPEC.md) · [相容性說明](docs/COMPATIBILITY.md) · [疑難排解](docs/TROUBLESHOOTING.md) · [巡檢手冊](docs/COOKBOOK.md) · [安全政策](SECURITY.md) · [研究來源與授權](docs/RESEARCH_AND_LICENSES.md)
+[English](README.md) · [指令規格](docs/CLI_SPEC.md) · [相容性說明](docs/COMPATIBILITY.md) · [疑難排解](docs/TROUBLESHOOTING.md) · [巡檢手冊](docs/COOKBOOK.md) · [報告範例](examples/reports/README.md) · [安全政策](SECURITY.md) · [研究來源與授權](docs/RESEARCH_AND_LICENSES.md)
 
 ## 功能
 
@@ -14,7 +14,7 @@
 - 從 `/sys` 與 `/proc` 建立實體磁碟、分割區、Linux 軟體 RAID 和 `/volumeN` 掛載點的對應。
 - 稽核 DeadBolt 防護基線、在有限時間與命中數內搜尋檔名及 ADM 管理頁線索，並比對 JSON 報告。
 - 檢查 NAS 是否符合 `asustor-platform-driver` 的核心版本及硬體需求；符合條件時，可在建立本機狀態備份並完成明確確認後載入或卸載驅動模組。
-- 透過 stdio 提供無額外依賴、唯讀的 MCP 伺服器。
+- 透過 stdio 提供無額外依賴、唯讀的 MCP 伺服器，包含結構化健康摘要與精簡風險訊號工具。
 
 這是系統維運輔助工具，不會讀取檔案內容做惡意程式掃描、不會驗證備份可還原性、不會判定路由器對外暴露，也不能證明 NAS 沒有感染。
 
@@ -145,7 +145,7 @@ adm platform module --reset --host NAS-IP --user nas-user \
 }
 ```
 
-伺服器需要 SSH 金鑰／agent 驗證，只執行固定 SSH 指令並提供唯讀工具。新增 SMART、溫度觀察，以及不連線 NAS、直接比對兩份報告物件的 `adm_security_compare`。`adm_platform_status` 只讀取支援狀態；MCP 不提供載入、卸載或重設模組功能。更多細節見[指令規格](docs/CLI_SPEC.md#mcp-interface)。
+伺服器需要 SSH 金鑰／agent 驗證，只執行固定 SSH 指令並提供唯讀工具。`adm_health_summary` 回傳結構化健康欄位和原始 sections；`adm_risk_signals` 只回傳涵蓋狀態，以及 RAID、SMART、溫度的重點訊號，不含原始 sections。溫度門檻是可調整的通用提醒值。`adm_security_compare` 可在不連線 NAS 的情況下比對兩份報告。`adm_platform_status` 只讀取支援狀態；MCP 不提供載入、卸載或重設模組功能。更多細節見[指令規格](docs/CLI_SPEC.md#mcp-interface)及[報告範例](examples/reports/README.md)。
 
 ## 專案規格與貢獻
 

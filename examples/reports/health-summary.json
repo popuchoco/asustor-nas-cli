@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "report_type": "diagnostic-summary",
+  "command": "health",
+  "host": "NAS",
+  "host_id": "example-host-id",
+  "ssh_port": 22,
+  "summary": {
+    "state": "observed",
+    "coverage": "complete",
+    "risk_signals": [],
+    "recommended_exit_code": 0,
+    "temperature_warning_celsius": 80.0,
+    "system": {
+      "hostname": "example-nas",
+      "kernel": "Linux 6.1.0",
+      "uptime": "up 30 days",
+      "cpu": "Example CPU",
+      "memory_mib": {
+        "total_mib": 4096,
+        "used_mib": 1024,
+        "free_mib": 3072
+      },
+      "parse_errors": 0,
+      "coverage": "complete"
+    },
+    "storage": {
+      "filesystem_count": 1,
+      "filesystems": [
+        {
+          "source": "/dev/md0",
+          "size": "2T",
+          "used": "900G",
+          "available": "1.1T",
+          "use_percent": 45,
+          "mountpoint": "/volume1"
+        }
+      ],
+      "maximum_use_percent": 45,
+      "parse_errors": 0,
+      "coverage": "complete"
+    },
+    "raid": {
+      "state": "observed",
+      "coverage": "complete",
+      "array_count": 1,
+      "degraded_arrays": [],
+      "unknown_arrays": [],
+      "arrays": [
+        {
+          "name": "md0",
+          "members": [
+            "sda1",
+            "sdb1"
+          ],
+          "state": "active",
+          "level": "raid1",
+          "expected_members": 2,
+          "active_members": 2,
+          "member_status": "UU",
+          "degraded": false
+        }
+      ]
+    },
+    "smart": {
+      "coverage": "complete",
+      "state": "passed",
+      "device_count": 2,
+      "failed_count": 0,
+      "unknown_count": 0,
+      "failed_devices": [],
+      "unknown_devices": []
+    },
+    "temperature": {
+      "coverage": "complete",
+      "sensor_count": 1,
+      "minimum_celsius": 45.0,
+      "maximum_celsius": 45.0,
+      "warning_threshold_celsius": 80.0,
+      "high_count": 0,
+      "high_sensors": []
+    },
+    "additional_sections": {
+      "network": "complete",
+      "disks": "complete"
+    }
+  },
+  "sections": {
+    "system": "hostname: example-nas\nkernel: Linux 6.1.0\nuptime: up 30 days\ncpu: Example CPU\nmemory (MiB):\n              total        used        free\nMem:           4096        1024        3072",
+    "storage": "Filesystem Size Used Avail Use% Mounted on\n/dev/md0 2T 900G 1.1T 45% /volume1",
+    "raid": "Personalities : [raid1]\nmd0 : active raid1 sda1[0] sdb1[1]\n      1953383488 blocks [2/2] [UU]\nunused devices: <none>",
+    "network": "--- interfaces ---\neth0: UP",
+    "disks": "devices: /dev/sda /dev/sdb"
+  }
+}

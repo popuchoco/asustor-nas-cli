@@ -18,7 +18,11 @@ from asustor_nas_cli.security import (
     compare_reports,
 )
 from asustor_nas_cli.smart_health import parse_smart_health_output
-from asustor_nas_cli.summaries import build_diagnostic_summary, build_health_summary
+from asustor_nas_cli.summaries import (
+    build_diagnostic_summary,
+    build_health_summary,
+    build_risk_signals_report,
+)
 from asustor_nas_cli.temperature import parse_temperature_output
 from asustor_nas_cli.topology import parse_disk_topology
 
@@ -151,6 +155,7 @@ class PublishedSchemaTests(unittest.TestCase):
                 host_id="fixture-host",
             ),
         ]
+        risk_signals = build_risk_signals_report(diagnostic_summary)
         operation = {
             "schema_version": 1,
             "report_type": "platform-module-operation",
@@ -175,6 +180,7 @@ class PublishedSchemaTests(unittest.TestCase):
             "platform-module-backup": backup,
             "platform-module-operation": operation,
             "platform-status": status,
+            "risk-signals": risk_signals,
             "security-audit": audit,
             "smart-health": smart,
             "temperature-observation": temperature,
@@ -190,6 +196,14 @@ class PublishedSchemaTests(unittest.TestCase):
         for report in diagnostic_summaries:
             with self.subTest(report=f"diagnostic-summary/{report['command']}"):
                 Draft202012Validator(SCHEMAS["diagnostic-summary"]).validate(report)
+        examples = ROOT / "examples" / "reports"
+        for filename, schema_name in (
+            ("health-summary.json", "diagnostic-summary"),
+            ("risk-signals.json", "risk-signals"),
+        ):
+            with self.subTest(example=filename):
+                example = json.loads((examples / filename).read_text(encoding="utf-8"))
+                Draft202012Validator(SCHEMAS[schema_name]).validate(example)
 
 
 if __name__ == "__main__":

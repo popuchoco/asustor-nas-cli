@@ -7,6 +7,7 @@ import os
 import re
 
 from . import __version__
+from .summaries import DEFAULT_TEMPERATURE_WARNING_CELSIUS
 
 
 def valid_host(value):
@@ -123,7 +124,7 @@ def build_parser():
     add_common_arguments(health, needs_ssh=True)
     health.add_argument("--summary", action="store_true", help="include structured RAID, SMART and temperature observations")
     health.add_argument("--exit-on-warning", action="store_true", help="return the summary's recommended nonzero exit code for warnings or incomplete coverage")
-    health.add_argument("--temperature-warning-celsius", type=temperature_warning, default=80.0, help="advisory thermal-zone threshold in °C for `health --summary` (default: 80)")
+    health.add_argument("--temperature-warning-celsius", type=temperature_warning, default=DEFAULT_TEMPERATURE_WARNING_CELSIUS, help="advisory thermal-zone threshold in °C for `health --summary` (default: 80)")
 
     for name, description in (
         ("status", "read system, CPU and memory information over SSH"),

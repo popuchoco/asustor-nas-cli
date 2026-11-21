@@ -1,3 +1,6 @@
+import json
+
+
 def format_audit(report):
     lines = [
         f"勒索病毒預防稽核：{report['host']} (ADM {report.get('adm_version') or 'unknown'})",
@@ -27,8 +30,16 @@ def format_incident(report):
 
 
 def format_comparison(report):
+    def visible(value):
+        raw = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, sort_keys=True)
+        return "".join(character if character.isprintable() else f"\\u{ord(character):04x}" for character in raw)
+
+    def detail(item):
+        return visible(item.get("path") or item.get("indicator") or item.get("status") or "no item detail")
+
     lines = [
-        f"報告比對：{report['host']} ({report['compared_type']})",
+        f"報告比對：{visible(report['host'])} ({visible(report['compared_type'])})",
+        f"涵蓋範圍：before {visible(report.get('coverage_before') or 'not recorded')} → after {visible(report.get('coverage_after') or 'not recorded')}",
         f"新增觀察：{report['counts']['newly_observed']}",
         f"不再觀察：{report['counts']['no_longer_observed']}",
         f"部分掃描或範圍變動未重見：{report['counts']['not_reobserved_in_incomplete_scan']}",
@@ -36,6 +47,19 @@ def format_comparison(report):
         f"不變：{report['counts']['unchanged']}",
         f"掃描範圍改變：{'是' if report['scope_changed'] else '否'}",
         f"覆蓋狀態改變：{'是' if report['coverage_state_changed'] else '否'}",
-        report["note"],
     ]
+    for item in report["changes"]["newly_observed"]:
+        lines.append(f"  [+ NEW] {visible(item.get('id', 'unknown'))}: {detail(item)}")
+    for item in report["changes"]["no_longer_observed"]:
+        lines.append(f"  [? NOT OBSERVED] {visible(item.get('id', 'unknown'))}: {detail(item)}")
+    for item in report["changes"]["not_reobserved_in_incomplete_scan"]:
+        lines.append(f"  [? INCOMPLETE / NOT REOBSERVED] {visible(item.get('id', 'unknown'))}: {detail(item)}")
+    for change in report["changes"]["status_changed"]:
+        before = change.get("before", {})
+        after = change.get("after", {})
+        lines.append(
+            f"  [~ STATUS CHANGED] {visible(after.get('id', before.get('id', 'unknown')))}: "
+            f"{visible(before.get('status', 'unknown'))} → {visible(after.get('status', 'unknown'))}; {detail(after)}"
+        )
+    lines.append(report["note"])
     return "\n".join(lines)

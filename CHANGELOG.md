@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 — 2026-11-21
+
+- Add read-only MCP tools for structured health summaries and concise RAID/SMART/temperature risk signals.
+- Highlight newly observed, changed, and not-reobserved findings in human-readable offline report comparisons.
+- Publish synthetic, redacted health-summary and risk-signal JSON examples and validate them against their schemas.
+- Keep failed SMART devices distinct from devices with unknown status in derived health summaries.
+
 ## 1.1.0 — 2026-11-21
 
 - Add optional structured summaries for status, health, storage, and RAID while preserving the raw diagnostic sections.

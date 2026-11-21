@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "report_type": "risk-signals",
+  "host": "NAS",
+  "host_id": "example-host-id",
+  "ssh_port": 22,
+  "summary": {
+    "state": "attention",
+    "coverage": "partial",
+    "risk_signals": [
+      {
+        "code": "raid_degraded",
+        "severity": "warning",
+        "message": "Degraded RAID array(s): md0"
+      },
+      {
+        "code": "smart_failed",
+        "severity": "critical",
+        "message": "SMART health failed on 1 device(s)."
+      },
+      {
+        "code": "temperature_high",
+        "severity": "warning",
+        "message": "Thermal-zone reading(s) at or above 80 °C: thermal_zone0."
+      }
+    ],
+    "recommended_exit_code": 2,
+    "raid": {
+      "state": "degraded",
+      "coverage": "complete",
+      "degraded_arrays": [
+        "md0"
+      ]
+    },
+    "smart": {
+      "coverage": "partial",
+      "state": "failed",
+      "failed_count": 1,
+      "failed_devices": [
+        "sda"
+      ],
+      "unknown_count": 0,
+      "unknown_devices": []
+    },
+    "temperature": {
+      "coverage": "complete",
+      "warning_threshold_celsius": 80.0,
+      "high_count": 1,
+      "high_sensors": [
+        {
+          "sensor": "thermal_zone0",
+          "celsius": 85.0
+        }
+      ]
+    }
+  }
+}

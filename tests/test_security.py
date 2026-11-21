@@ -6,6 +6,7 @@ from asustor_nas_cli.security import (
     build_security_audit,
     compare_reports,
 )
+from asustor_nas_cli.security.render import format_comparison
 
 HOST = "192.0.2.10"
 PORTAL_VERIFIED = {
@@ -123,6 +124,27 @@ class SecurityReportTests(unittest.TestCase):
         after = build_incident_report(HOST, 22, scan_output=after_output, portal=PORTAL_VERIFIED)
         comparison = compare_reports(before, after)
         self.assertEqual(comparison["counts"]["newly_observed"], 1)
+        rendered = format_comparison(comparison)
+        self.assertIn("[+ NEW] deadbolt.file_suffix", rendered)
+        self.assertIn("涵蓋範圍", rendered)
+
+    def test_comparison_escapes_terminal_control_characters_in_report_details(self):
+        output = (
+            "__ADM_VOLUME__=/volume1\n"
+            "/volume1/name\x1b[31m.deadbolt\n"
+            "__ADM_SCAN_ELAPSED__=1\n"
+            "__ADM_SCAN_EXIT__=0\n"
+        )
+        before = build_incident_report(
+            HOST,
+            22,
+            scan_output="__ADM_VOLUME__=/volume1\n__ADM_SCAN_ELAPSED__=1\n__ADM_SCAN_EXIT__=0\n",
+            portal=PORTAL_VERIFIED,
+        )
+        report = build_incident_report(HOST, 22, scan_output=output, portal=PORTAL_VERIFIED)
+        rendered = format_comparison(compare_reports(before, report))
+        self.assertNotIn("\x1b", rendered)
+        self.assertIn("\\u001b[31m", rendered)
 
     def test_comparison_rejects_different_hosts(self):
         report = build_incident_report(
@@ -167,6 +189,7 @@ class SecurityReportTests(unittest.TestCase):
         self.assertTrue(comparison["scope_changed"])
         self.assertEqual(comparison["counts"]["no_longer_observed"], 0)
         self.assertEqual(comparison["counts"]["not_reobserved_in_incomplete_scan"], 1)
+        self.assertIn("[? INCOMPLETE / NOT REOBSERVED]", format_comparison(comparison))
 
 
 if __name__ == "__main__":

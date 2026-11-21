@@ -108,6 +108,9 @@ class StructuredSummaryTests(unittest.TestCase):
             {signal["code"] for signal in summary["risk_signals"]},
             {"raid_degraded", "smart_failed", "temperature_high"},
         )
+        self.assertEqual(summary["smart"]["failed_devices"], ["sda"])
+        self.assertEqual(summary["smart"]["unknown_count"], 0)
+        self.assertEqual(summary["smart"]["unknown_devices"], [])
         self.assertEqual(summary["temperature"]["high_sensors"], [{"sensor": "thermal_zone0", "celsius": 85.0}])
 
     def test_health_summary_marks_missing_observations_unknown(self):

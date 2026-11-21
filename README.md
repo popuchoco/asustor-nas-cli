@@ -4,7 +4,7 @@
 
 Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt ransomware checks, and guarded platform-driver module management. The command is named `adm`, after ASUSTOR's operating system.
 
-[繁體中文](README.zh-TW.md) · [Command specification](docs/CLI_SPEC.md) · [Compatibility notes](docs/COMPATIBILITY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Cookbook](docs/COOKBOOK.md) · [Security](SECURITY.md) · [Research and licenses](docs/RESEARCH_AND_LICENSES.md)
+[繁體中文](README.zh-TW.md) · [Command specification](docs/CLI_SPEC.md) · [Compatibility notes](docs/COMPATIBILITY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Cookbook](docs/COOKBOOK.md) · [Report examples](examples/reports/README.md) · [Security](SECURITY.md) · [Research and licenses](docs/RESEARCH_AND_LICENSES.md)
 
 ## What it does
 
@@ -14,7 +14,7 @@ Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt
 - Maps physical disks, partitions, Linux software RAID arrays, and `/volumeN` mounts through `/sys` and `/proc`.
 - Audits a DeadBolt prevention baseline, scans a bounded set of filenames and ADM portal text for known indicators, and compares saved JSON reports.
 - Checks whether the host meets the kernel and hardware requirements for `asustor-platform-driver`; on supported Linux hosts, it can load or unload that driver family after creating a local state backup and completing explicit confirmation.
-- Offers a dependency-free, read-only MCP server over stdio.
+- Offers a dependency-free, read-only MCP server over stdio, including structured health summaries and a concise risk-signals tool.
 
 This project is an operations aid. It does not read file contents for malware, verify backup integrity, determine whether services are exposed through a router, or prove that a NAS is clean.
 
@@ -145,7 +145,7 @@ Configure your MCP client to launch `adm mcp` and provide its environment:
 }
 ```
 
-The server requires SSH key/agent authentication, uses fixed SSH commands, and exposes read-only tools only. It includes SMART and temperature observations plus `adm_security_compare`, which compares two report objects without connecting to the NAS. `adm_platform_status` is read-only; module load, unload, and reset are not available over MCP. See [MCP and JSON interface details](docs/CLI_SPEC.md#mcp-interface).
+The server requires SSH key/agent authentication, uses fixed SSH commands, and exposes read-only tools only. `adm_health_summary` returns structured health fields with raw sections, while `adm_risk_signals` returns coverage and notable RAID, SMART, and temperature signals without raw sections. The configurable temperature value is a generic advisory. `adm_security_compare` compares two report objects without connecting to the NAS. `adm_platform_status` is read-only; module load, unload, and reset are not available over MCP. See [MCP and JSON interface details](docs/CLI_SPEC.md#mcp-interface) and [example reports](examples/reports/README.md).
 
 ## Project design and contribution
 

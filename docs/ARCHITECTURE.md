@@ -14,7 +14,7 @@ adm CLI ── HTTPS ──> ADM portal
 MCP stdio ──> same read-only query/report functions
 ```
 
-MCP and ordinary inspection commands are read-only. Kernel-module load/unload is available only through the explicit CLI module operation, never through MCP.
+MCP and ordinary inspection commands are read-only. MCP includes raw health observations, a structured health summary, and a concise risk-signals report. Kernel-module load/unload is available only through the explicit CLI module operation, never through MCP.
 
 ## Modules
 
