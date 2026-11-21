@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/report-comparison.schema.json",
+  "title": "ASUSTOR structured health report comparison",
+  "type": "object",
+  "required": ["schema_version", "report_type", "compared_type", "command", "host", "host_id", "generated_at_before", "generated_at_after", "summary_state_before", "summary_state_after", "coverage_before", "coverage_after", "changes", "counts", "note"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "report-comparison"},
+    "compared_type": {"enum": ["diagnostic-summary", "risk-signals"]},
+    "command": {"enum": ["status", "health", "storage", "raid", null]},
+    "host": {"const": "NAS"},
+    "host_id": {"type": "string", "minLength": 1},
+    "generated_at_before": {"type": ["string", "null"]},
+    "generated_at_after": {"type": ["string", "null"]},
+    "summary_state_before": {"type": ["string", "null"]},
+    "summary_state_after": {"type": ["string", "null"]},
+    "coverage_before": {"enum": ["complete", "partial", "unavailable"]},
+    "coverage_after": {"enum": ["complete", "partial", "unavailable"]},
+    "changes": {
+      "type": "object",
+      "required": ["risk_added", "risk_cleared", "risk_changed", "risk_not_reobserved", "risk_unchanged", "summary_changed", "summary_newly_observed", "summary_removed", "summary_not_reobserved"],
+      "properties": {
+        "risk_added": {"type": "array", "items": {"$ref": "#/$defs/riskSignal"}},
+        "risk_cleared": {"type": "array", "items": {"$ref": "#/$defs/riskSignal"}},
+        "risk_changed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["before", "after"],
+            "properties": {
+              "before": {"$ref": "#/$defs/riskSignal"},
+              "after": {"$ref": "#/$defs/riskSignal"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "risk_not_reobserved": {"type": "array", "items": {"$ref": "#/$defs/riskSignal"}},
+        "risk_unchanged": {"type": "array", "items": {"$ref": "#/$defs/riskSignal"}},
+        "summary_changed": {"type": "array", "items": {"$ref": "#/$defs/fieldChange"}},
+        "summary_newly_observed": {"type": "array", "items": {"$ref": "#/$defs/fieldValue"}},
+        "summary_removed": {"type": "array", "items": {"$ref": "#/$defs/fieldValue"}},
+        "summary_not_reobserved": {"type": "array", "items": {"$ref": "#/$defs/fieldValue"}}
+      },
+      "additionalProperties": false
+    },
+    "counts": {
+      "type": "object",
+      "required": ["risk_added", "risk_cleared", "risk_changed", "risk_not_reobserved", "risk_unchanged", "summary_changed", "summary_newly_observed", "summary_removed", "summary_not_reobserved"],
+      "properties": {
+        "risk_added": {"type": "integer", "minimum": 0},
+        "risk_cleared": {"type": "integer", "minimum": 0},
+        "risk_changed": {"type": "integer", "minimum": 0},
+        "risk_not_reobserved": {"type": "integer", "minimum": 0},
+        "risk_unchanged": {"type": "integer", "minimum": 0},
+        "summary_changed": {"type": "integer", "minimum": 0},
+        "summary_newly_observed": {"type": "integer", "minimum": 0},
+        "summary_removed": {"type": "integer", "minimum": 0},
+        "summary_not_reobserved": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "note": {"type": "string"}
+  },
+  "$defs": {
+    "riskSignal": {
+      "type": "object",
+      "required": ["code", "severity", "message"],
+      "properties": {
+        "code": {"enum": ["raid_degraded", "smart_failed", "temperature_high"]},
+        "severity": {"enum": ["warning", "critical"]},
+        "message": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "fieldChange": {
+      "type": "object",
+      "required": ["field", "before", "after"],
+      "properties": {
+        "field": {"type": "string"},
+        "before": {"type": "string"},
+        "after": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "fieldValue": {
+      "type": "object",
+      "required": ["field", "value"],
+      "properties": {
+        "field": {"type": "string"},
+        "value": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -203,6 +203,12 @@ def build_parser():
         required=True,
         help="diagnostic-summary or risk-signals JSON file, or '-' for stdin",
     )
+    report_compare = report_commands.add_parser(
+        "compare", help="compare two saved diagnostic-summary or risk-signals reports"
+    )
+    report_compare.add_argument("--before", required=True, help="earlier JSON report")
+    report_compare.add_argument("--after", required=True, help="later JSON report")
+    report_compare.add_argument("--json", action="store_true", help="print comparison JSON")
 
     commands.add_parser("mcp", help="run the read-only MCP server over stdio")
 

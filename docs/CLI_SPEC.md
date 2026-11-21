@@ -14,6 +14,8 @@
 - `health --summary` adds a structured summary for system, storage, RAID, SMART, and temperature observations while retaining the raw `health` sections. It also reports whether the raw network and disk-list sections were returned. SMART and thermal observations use the same fixed read-only SSH operations as their standalone commands.
 - `health --summary --temperature-warning-celsius C` changes the generic temperature advisory threshold (default `80`). It is not a model-specific safe-temperature limit or health verdict.
 - `health --summary --exit-on-warning` returns `2` if a degraded RAID array, failed SMART state, or reading at/above the advisory temperature threshold is observed; otherwise it returns `1` for incomplete/unavailable coverage and `0` for complete observations without those signals. Without this option, successful collection returns `0` as before.
+- Structured `diagnostic-summary` and `risk-signals` reports include an optional UTC `generated_at` timestamp for offline history comparisons.
+- `report compare --before FILE --after FILE` compares schema-v1 structured summaries from the same NAS and report type. It reports risk-signal and summary-field changes, treats missing fields as not reobserved when the later report is incomplete, and never connects to the NAS.
 - JSON and MCP outputs use the host label `NAS` and a stable `host_id` fingerprint instead of the configured address. IP/MAC addresses in SSH output and NAS account names in errors are redacted. SSH passwords and private-key contents are never returned or stored.
 
 ## Command catalog
@@ -35,6 +37,7 @@
 | `incident scan` | Bounded filename scan + ADM portal text | `incident-scan`, schema v1 |
 | `security compare` | Two saved audit/scan reports | `comparison`, schema v1 |
 | `report render` | Saved diagnostic-summary or risk-signals JSON; local and offline | Markdown text |
+| `report compare` | Two saved diagnostic-summary or risk-signals reports; local and offline | `report-comparison`, schema v1 |
 | `platform status` | Kernel, DMI, module state; read-only | `platform-status`, schema v1 |
 | `platform module --load/--unload/--reset` | Fixed `modprobe` operations after compatibility gate | `platform-module-operation`, schema v1 |
 
@@ -74,6 +77,7 @@ Schemas use JSON Schema Draft 2020-12 and are published under [`schemas/`](../sc
 - `security-audit.schema.json`
 - `incident-scan.schema.json`
 - `comparison.schema.json`
+- `report-comparison.schema.json`
 - `platform-status.schema.json`
 - `platform-module-backup.schema.json`
 - `platform-module-operation.schema.json`

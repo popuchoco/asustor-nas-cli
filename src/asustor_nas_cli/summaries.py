@@ -3,6 +3,7 @@
 import re
 
 from .privacy import REDACTED_HOST, host_fingerprint
+from .security.common import utc_now
 from .topology import parse_mdstat
 
 DEFAULT_TEMPERATURE_WARNING_CELSIUS = 80.0
@@ -224,6 +225,7 @@ def build_diagnostic_summary(command, sections, host, ssh_port, host_id=None):
     return {
         "schema_version": 1,
         "report_type": "diagnostic-summary",
+        "generated_at": utc_now(),
         "command": command,
         "host": REDACTED_HOST,
         "host_id": host_id or host_fingerprint(host),
@@ -284,6 +286,7 @@ def build_health_summary(sections, smart_report, temperature_report, host, ssh_p
     return {
         "schema_version": 1,
         "report_type": "diagnostic-summary",
+        "generated_at": utc_now(),
         "command": "health",
         "host": REDACTED_HOST,
         "host_id": host_id or host_fingerprint(host),
@@ -313,6 +316,7 @@ def build_risk_signals_report(health_report):
     return {
         "schema_version": 1,
         "report_type": "risk-signals",
+        "generated_at": health_report.get("generated_at"),
         "host": health_report["host"],
         "host_id": health_report["host_id"],
         "ssh_port": health_report["ssh_port"],

@@ -7,6 +7,7 @@
   "properties": {
     "schema_version": {"const": 1},
     "report_type": {"const": "diagnostic-summary"},
+    "generated_at": {"type": "string", "format": "date-time"},
     "command": {"enum": ["status", "health", "storage", "raid"]},
     "host": {"type": ["string", "null"]},
     "host_id": {"type": ["string", "null"]},

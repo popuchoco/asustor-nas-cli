@@ -39,6 +39,19 @@ $renderExitCode = $LASTEXITCODE
 
 The Markdown renderer accepts `diagnostic-summary` and `risk-signals` schema-v1 reports up to 1 MB and writes at most 2 MB. It omits raw SSH sections and redacts host labels, IP/MAC addresses, and account/secret fields. Review the remaining operational details before sharing the file.
 
+## Compare today's health summary with yesterday's
+
+Keep one structured report per collection date, then compare two reports locally:
+
+```powershell
+adm health --host nas.example --user nas-user --summary --json > .\health-today.json
+$todayExitCode = $LASTEXITCODE
+adm report compare --before .\health-yesterday.json --after .\health-today.json --json > .\health-diff.json
+$compareExitCode = $LASTEXITCODE
+```
+
+The comparison requires the same host fingerprint and report type. It shows changes to summary values and risk signals. A missing signal or field is marked `not_reobserved` when today's coverage is partial or unavailable; that is not evidence that a problem was fixed. Preserve both source reports because comparison does not change them.
+
 ## DeadBolt review and report comparison
 
 Save a prevention audit and a bounded indicator scan before changing settings or beginning incident response:

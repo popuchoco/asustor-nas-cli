@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "report_type": "diagnostic-summary",
+  "generated_at": "2026-11-21T00:00:00Z",
   "command": "health",
   "host": "NAS",
   "host_id": "example-host-id",

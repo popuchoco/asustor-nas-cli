@@ -19,13 +19,13 @@ Do not run mutating platform-module commands on a production NAS as part of ordi
 - Keep remote commands fixed and allowlisted; never interpolate arbitrary shell input.
 - Preserve the read-only MCP contract.
 - Add or update report schemas and `docs/CLI_SPEC.md` when output contracts change.
-- Update `docs/COMPATIBILITY.md` only for models/versions actually verified by this CLI. Keep design-only comparisons in `docs/REFERENCE_REVIEW.md`.
+- Update `docs/COMPATIBILITY.md` only for models/versions actually verified by this CLI.
 - Add a dated changelog entry for every user-visible change using `## X.Y.Z — YYYY-MM-DD`; include behavior, safety, and compatibility effects.
 - Update the English and Traditional Chinese README files and `docs/TROUBLESHOOTING.md` for user-facing changes.
 - Describe risks and recovery behavior for any new hardware mutation.
 - Do not commit NAS credentials, SSH keys, serial numbers, private incident reports, or platform backup snapshots.
 - Do not add copied code or binaries from reference projects without reviewing their licenses and explicitly documenting the actual reuse.
-- Keep third-party and license inventories limited to dependencies, source, binaries, or integration targets the product actually uses; design-only comparison projects belong only in the comparison notes.
+- List external software or technical sources only when the project actually uses them as a dependency, copied source/binary, workflow action, or implemented integration target. Do not list projects consulted only as design references.
 - Redact real NAS addresses and login material from commits, fixtures, documentation, examples, and logs.
 
 ## Pull requests

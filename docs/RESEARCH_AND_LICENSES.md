@@ -1,6 +1,6 @@
 # Research sources and licenses
 
-This record lists software and technical sources actually used by the project. It does not list projects consulted only for design comparison; those comparisons remain in [REFERENCE_REVIEW.md](REFERENCE_REVIEW.md).
+This record lists only software and technical sources that directly inform implemented behavior or are used by the repository's workflows.
 
 ## Project license
 

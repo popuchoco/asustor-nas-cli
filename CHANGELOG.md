@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0 — 2026-11-21
+
+- Add offline `adm report compare` for diagnostic-summary and risk-signals history, including changed risk signals and structured fields.
+- Mark missing observations as not reobserved when the later report has incomplete coverage; require matching host fingerprints and report types.
+- Add UTC `generated_at` metadata and publish the `report-comparison` schema and daily comparison cookbook.
+- Remove the design-only project inventory and references from the README; keep research/license records limited to software and sources used by implemented behavior or workflows.
+
 ## 1.4.0 — 2026-11-21
 
 - Add `adm report render` for offline Markdown export of schema-v1 diagnostic-summary and risk-signals reports, with 1 MB input and 2 MB output caps plus stdin support.

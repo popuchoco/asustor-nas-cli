@@ -12,6 +12,7 @@ from asustor_nas_cli.platform import (
     parse_platform_status,
     snapshot_for_backup,
 )
+from asustor_nas_cli.report_comparison import compare_health_reports
 from asustor_nas_cli.security import (
     build_incident_report,
     build_security_audit,
@@ -66,7 +67,7 @@ def incident_report():
             "__ADM_SCAN_EXIT__=0\n"
         ),
         portal=PORTAL,
-        host_id="fixture-host",
+        host_id="0123456789abcdef",
     )
 
 
@@ -83,7 +84,7 @@ class PublishedSchemaTests(unittest.TestCase):
             22,
             "__ADM_NETSTAT_UNAVAILABLE__",
             PORTAL,
-            host_id="fixture-host",
+            host_id="0123456789abcdef",
         )
         before = incident_report()
         after = incident_report()
@@ -138,24 +139,25 @@ class PublishedSchemaTests(unittest.TestCase):
                 {"system": "kernel: Linux 6.1.0\nMem: 1024 512 512"},
                 host="NAS",
                 ssh_port=22,
-                host_id="fixture-host",
+                host_id="0123456789abcdef",
             ),
             build_diagnostic_summary(
                 "storage",
                 {"storage": "Filesystem Size Used Avail Use% Mounted on\n/dev/md1 1T 500G 500G 50% /volume1"},
                 host="NAS",
                 ssh_port=22,
-                host_id="fixture-host",
+                host_id="0123456789abcdef",
             ),
             build_diagnostic_summary(
                 "raid",
                 {"raid": "Personalities : [raid1]\nunused devices: <none>"},
                 host="NAS",
                 ssh_port=22,
-                host_id="fixture-host",
+                host_id="0123456789abcdef",
             ),
         ]
         risk_signals = build_risk_signals_report(diagnostic_summary)
+        report_comparison = compare_health_reports(diagnostic_summary, diagnostic_summary)
         operation = {
             "schema_version": 1,
             "report_type": "platform-module-operation",
@@ -181,6 +183,7 @@ class PublishedSchemaTests(unittest.TestCase):
             "platform-module-operation": operation,
             "platform-status": status,
             "risk-signals": risk_signals,
+            "report-comparison": report_comparison,
             "security-audit": audit,
             "smart-health": smart,
             "temperature-observation": temperature,

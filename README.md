@@ -12,7 +12,7 @@ Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt
 - Reads SMART health status without starting self-tests; standby drives are left unqueried.
 - Reads available Linux thermal-zone temperatures as observations, without applying model-specific health thresholds.
 - Maps physical disks, partitions, Linux software RAID arrays, and `/volumeN` mounts through `/sys` and `/proc`.
-- Audits a DeadBolt prevention baseline, scans a bounded set of filenames and ADM portal text for known indicators, compares saved JSON reports, and renders structured summaries as Markdown offline.
+- Audits a DeadBolt prevention baseline, scans a bounded set of filenames and ADM portal text for known indicators, compares saved JSON reports across runs, and renders structured summaries as Markdown offline.
 - Checks whether the host meets the kernel and hardware requirements for `asustor-platform-driver`; on supported Linux hosts, it can load or unload that driver family after creating a local state backup and completing explicit confirmation.
 - Offers a dependency-free, read-only MCP server over stdio, including structured health summaries and a concise risk-signals tool.
 
@@ -68,12 +68,15 @@ CLI JSON and MCP responses label the device as `NAS` and include a stable `host_
 | `adm security audit` | Review the DeadBolt prevention baseline |
 | `adm incident scan` | Search volume filenames and portal text for bounded DeadBolt indicators |
 | `adm security compare` | Compare two compatible audit or scan JSON reports |
+| `adm report compare` | Compare structured health summaries and risk signals from two runs |
 | `adm report render` | Render a saved health summary or risk-signals JSON report as Markdown, offline |
 | `adm platform status` | Read kernel, DMI, and platform-driver module state |
 | `adm platform module --load/--unload/--reset` | Guarded module lifecycle control on verified compatible Linux hosts |
 | `adm mcp` | Serve read-only MCP tools over stdio |
 
 All NAS observation commands support `--json`. JSON reports use `schema_version: 1`; supported report schemas are in [`schemas/`](schemas/). Command exit codes are documented in the [CLI specification](docs/CLI_SPEC.md).
+
+`adm report compare --before yesterday.json --after today.json` compares saved health or risk-summary reports offline. It requires the same report type and host fingerprint, detects changed structured fields and risk signals, and marks missing observations as not reobserved when the later coverage is incomplete.
 
 Render a structured report with `adm report render --input health.json`; use `--input -` to read JSON from standard input. It accepts version-1 `diagnostic-summary` and `risk-signals` reports up to 1 MB, writes at most 2 MB of Markdown to stdout, and never connects to the NAS. Raw SSH `sections` are omitted. Host labels, IP/MAC addresses, and fields named for accounts or secrets are redacted; review remaining operational details before sharing.
 
@@ -150,14 +153,14 @@ Configure your MCP client to launch `adm mcp` and provide its environment:
 
 The server requires SSH key/agent authentication, uses fixed SSH commands, and exposes read-only tools only. `adm_health_summary` returns structured health fields with raw sections, while `adm_risk_signals` returns coverage and notable RAID, SMART, and temperature signals without raw sections. The configurable temperature value is a generic advisory. `adm_security_compare` compares two report objects without connecting to the NAS. `adm_platform_status` is read-only; module load, unload, and reset are not available over MCP. See [MCP and JSON interface details](docs/CLI_SPEC.md#mcp-interface) and [example reports](examples/reports/README.md).
 
-## Project design and contribution
+## Project structure and contribution
 
-The CLI follows the product conventions of [synology-nas-cli](https://github.com/akari-sora/synology-nas-cli) and [qnap-nas-cli](https://github.com/popuchoco/qnap-nas-cli): OS-named command, structured reports, MCP, explicit safety boundaries, compatibility notes, and reusable docs. The [reference review](docs/REFERENCE_REVIEW.md) explains what was adopted and what was excluded from the three ASUSTOR projects.
+The `adm` command keeps diagnostic, security, report, and guarded platform-control responsibilities in separate modules. See [architecture](docs/ARCHITECTURE.md), [contributing](CONTRIBUTING.md), and the [release checklist](docs/RELEASE_CHECKLIST.md).
 
 See [architecture](docs/ARCHITECTURE.md), [troubleshooting](docs/TROUBLESHOOTING.md), [cookbook](docs/COOKBOOK.md), [release checklist](docs/RELEASE_CHECKLIST.md), [security review](docs/SECURITY_REVIEW.md), [contributing](CONTRIBUTING.md), [publishing and installation](docs/PUBLISHING.md), [change log](CHANGELOG.md), and [security policy](SECURITY.md).
 
 ## License and trademarks
 
-This project's original code and documentation are licensed under MIT; see [LICENSE](LICENSE). Research sources and the license review are recorded in [Research and licenses](docs/RESEARCH_AND_LICENSES.md), with design decisions in the [reference review](docs/REFERENCE_REVIEW.md).
+This project's original code and documentation are licensed under MIT; see [LICENSE](LICENSE). Software actually used by the project and its license review are recorded in [Research and licenses](docs/RESEARCH_AND_LICENSES.md).
 
 This is an independent community project. It is not affiliated with, endorsed by, or sponsored by ASUSTOR Inc. ASUSTOR, ADM, and ASUSTOR product and model names are trademarks of their respective rights holders.

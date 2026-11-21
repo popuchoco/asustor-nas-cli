@@ -7,6 +7,7 @@
   "properties": {
     "schema_version": {"const": 1},
     "report_type": {"const": "risk-signals"},
+    "generated_at": {"type": ["string", "null"], "format": "date-time"},
     "host": {"type": ["string", "null"]},
     "host_id": {"type": ["string", "null"]},
     "ssh_port": {"type": ["integer", "null"]},
