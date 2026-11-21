@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/smart-health.schema.json",
+  "title": "ASUSTOR SMART health status observation",
+  "type": "object",
+  "required": ["schema_version", "report_type", "generated_at", "host", "host_id", "ssh_port", "scope", "coverage", "tool_error", "parse_errors", "devices", "summary", "notes"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "smart-health"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "host": {"type": ["string", "null"]},
+    "host_id": {"type": ["string", "null"]},
+    "ssh_port": {"type": ["integer", "null"]},
+    "scope": {
+      "type": "object",
+      "required": ["operation", "self_tests_started", "device_contents_read"],
+      "properties": {
+        "operation": {"const": "SMART health status only"},
+        "self_tests_started": {"const": false},
+        "device_contents_read": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "coverage": {"enum": ["complete", "partial", "unavailable"]},
+    "tool_error": {"type": ["string", "null"]},
+    "parse_errors": {"type": "integer", "minimum": 0},
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["device", "health", "tool_exit_code"],
+        "properties": {
+          "device": {"type": "string", "pattern": "^(sd[a-z]+|nvme[0-9]+n[0-9]+)$"},
+          "health": {"enum": ["passed", "failed", "unknown"]},
+          "tool_exit_code": {"type": ["integer", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["state", "device_count", "failed_count", "unknown_count"],
+      "properties": {
+        "state": {"enum": ["passed", "failed", "unknown"]},
+        "device_count": {"type": "integer", "minimum": 0},
+        "failed_count": {"type": "integer", "minimum": 0},
+        "unknown_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "notes": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false
+}

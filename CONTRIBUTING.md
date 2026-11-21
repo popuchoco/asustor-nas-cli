@@ -5,12 +5,12 @@
 Use Python 3.10 or newer and the system OpenSSH client for NAS integration checks. The runtime package has no third-party Python dependencies.
 
 ```console
-python -m pip install -e .
+python -m pip install -e '.[test]'
 python -m unittest discover -s tests -v
 adm --help
 ```
 
-Pull requests and pushes to `main` run the same unit suite on Python 3.10–3.13 plus Ruff. Run `ruff check .` locally before submitting when Ruff is installed.
+Pull requests and pushes to `main` run the unit suite, including Draft 2020-12 JSON Schema validation, on Python 3.10–3.13 plus Ruff. Install the `test` extra to run schema tests locally. Run `ruff check .` locally before submitting when Ruff is installed.
 
 Do not run mutating platform-module commands on a production NAS as part of ordinary tests. Unit tests should cover their command generation, compatibility gates, backup validation and cancellation behavior with fixtures/mocks. Live module operations require hardware the reference driver explicitly supports, a recovery path, and a local state backup.
 

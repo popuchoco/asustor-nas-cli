@@ -45,9 +45,11 @@ def build_status_command():
 def parse_platform_status(output, host=None, ssh_port=None, host_id=None):
     lines = output.splitlines()
     fields = {}
+    duplicate_field = False
     for line in lines:
         if line.startswith("__ADM_PLATFORM_") and "=" in line:
             key, value = line.split("=", 1)
+            duplicate_field = duplicate_field or key in fields
             fields[key] = value.strip()
     kernel = fields.get("__ADM_PLATFORM_KERNEL__", "")
     vendor = fields.get("__ADM_PLATFORM_DMI_sys_vendor__", "")
@@ -76,7 +78,7 @@ def parse_platform_status(output, host=None, ssh_port=None, host_id=None):
         and lines.index(begin) < lines.index(end)
         for begin, end in marker_pairs
     )
-    markers_ok = required_markers.issubset(fields) and complete_marker_pair
+    markers_ok = required_markers.issubset(fields) and complete_marker_pair and not duplicate_field
     conflicts = [name for name in CONFLICT_MODULES if modules[name]]
     preflight_passed = markers_ok and kernel_supported and dmi_allowlisted and not conflicts
     return {

@@ -20,12 +20,18 @@ MCP and ordinary inspection commands are read-only. Kernel-module load/unload is
 
 | Module | Responsibility |
 | --- | --- |
-| `cli.py` | `adm` parser, validation, human/JSON output, exit status |
+| `cli.py` | Command routing and top-level error handling |
+| `cli_parser.py` | `adm` argument parsing and input validation |
+| `cli_support.py` | Shared JSON output and redacted, read-only SSH sections |
+| `cli_security.py` | DeadBolt audit, incident-scan, and report-comparison handlers |
+| `cli_platform.py` | Guarded platform-module command flow |
+| `cli_smart.py` | Read-only SMART health command handler |
 | `client.py` | HTTPS probe and OpenSSH transport; no password storage |
 | `commands.py` | Fixed ADM/Linux query allowlist and section parser |
 | `topology.py` | Parse `/sys/block`, `/proc/mdstat`, and `/proc/mounts` observations |
 | `security/` | DeadBolt audit rules, bounded scan parser, report comparison, rendering |
 | `platform.py` | Platform-driver preflight, module-state backup/validation, fixed load/unload plan |
+| `smart_health.py` | Fixed SMART health command and privacy-preserving status parser |
 | `mcp.py` | Dependency-free JSON-RPC/MCP stdio server using read-only functions |
 
 ## Guarded platform-module flow

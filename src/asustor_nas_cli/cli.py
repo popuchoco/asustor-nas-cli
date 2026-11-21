@@ -5,6 +5,7 @@ import sys
 from .cli_parser import build_parser, validate_user
 from .cli_platform import run_platform
 from .cli_security import run_incident_scan, run_security_audit, run_security_compare
+from .cli_smart import run_smart_health
 from .cli_support import print_json, run_ssh_sections
 from .client import CliError, probe_adm
 from .commands import DOCTOR_SECTIONS
@@ -182,6 +183,8 @@ def main():
             return run_health(args)
         if args.command == "disk-topology":
             return run_disk_topology(args)
+        if args.command == "smart":
+            return run_smart_health(args)
         if args.command == "security" and args.security_action == "audit":
             return run_security_audit(args)
         if args.command == "incident" and args.incident_action == "scan":

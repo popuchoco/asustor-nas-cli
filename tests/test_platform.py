@@ -63,6 +63,13 @@ class PlatformModuleTests(unittest.TestCase):
             report = parse_platform_status(malformed, "nas.example", 22)
             self.assertEqual(report["coverage"], "partial")
 
+    def test_duplicate_platform_fields_are_not_treated_as_complete(self):
+        malformed = status_output().replace(
+            "__ADM_PLATFORM_KERNEL__=6.8.0",
+            "__ADM_PLATFORM_KERNEL__=6.8.0\n__ADM_PLATFORM_KERNEL__=6.8.0",
+        )
+        self.assertEqual(parse_platform_status(malformed)["coverage"], "partial")
+
     def test_module_operation_result_markers_are_accepted(self):
         output = status_output().replace(
             "__ADM_PLATFORM_BEGIN__", "__ADM_PLATFORM_RESULT_BEGIN__"

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 — 2026-11-21
+
+- Add `adm smart` for read-only SMART health status; no self-tests are started and standby drives are skipped.
+- Add JSON Schema validation tests for every published report schema using the optional `test` dependency extra.
+- Add the first `smart-health` JSON Schema and document the absence of Linux 6.1+ live hardware.
+
 ## 0.4.0 — 2026-11-21
 
 - Add GitHub Actions CI for Python 3.10–3.13 and Ruff linting.

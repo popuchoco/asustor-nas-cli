@@ -10,6 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 dependencies = []
+
 keywords = ["asustor", "adm", "nas", "cli", "mcp", "security", "ransomware", "deadbolt"]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -24,6 +25,9 @@ classifiers = [
   "Topic :: System :: Systems Administration",
   "Topic :: Utilities",
 ]
+
+[project.optional-dependencies]
+test = ["jsonschema>=4.26,<5"]
 
 [project.urls]
 Homepage = "https://github.com/popuchoco/asustor-nas-cli"

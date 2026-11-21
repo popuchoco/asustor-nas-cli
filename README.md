@@ -9,6 +9,7 @@ Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt
 ## What it does
 
 - Runs fixed, read-only SSH commands for ADM system, storage, RAID, network, and disk observations.
+- Reads SMART health status without starting self-tests; standby drives are left unqueried.
 - Maps physical disks, partitions, Linux software RAID arrays, and `/volumeN` mounts through `/sys` and `/proc`.
 - Audits a DeadBolt prevention baseline, scans a bounded set of filenames and ADM portal text for known indicators, and compares saved JSON reports.
 - Checks whether the host meets the kernel and hardware requirements for `asustor-platform-driver`; on supported Linux hosts, it can load or unload that driver family after creating a local state backup and completing explicit confirmation.
@@ -58,6 +59,7 @@ CLI JSON and MCP responses label the device as `NAS` and include a stable `host_
 | `adm doctor` | Probe HTTPS and collect SSH diagnostics |
 | `adm status`, `health`, `storage`, `raid`, `network`, `disks` | Read ADM and Linux observations |
 | `adm disk-topology` | Map disks, partitions, md arrays, and volumes |
+| `adm smart` | Read SMART health status without starting self-tests |
 | `adm security audit` | Review the DeadBolt prevention baseline |
 | `adm incident scan` | Search volume filenames and portal text for bounded DeadBolt indicators |
 | `adm security compare` | Compare two compatible audit or scan JSON reports |
@@ -66,6 +68,8 @@ CLI JSON and MCP responses label the device as `NAS` and include a stable `host_
 | `adm mcp` | Serve read-only MCP tools over stdio |
 
 All NAS observation commands support `--json`. JSON reports use `schema_version: 1`; supported report schemas are in [`schemas/`](schemas/). Command exit codes are documented in the [CLI specification](docs/CLI_SPEC.md).
+
+`adm smart` runs only `smartctl -H -n standby` for supported block-device names. It does not start SMART self-tests or include disk serials/attributes; sleeping drives may be reported as unknown. This command has parser fixtures and schema coverage, but has not yet been exercised live on the AS-202TE.
 
 ## DeadBolt prevention and detection
 
