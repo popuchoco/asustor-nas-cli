@@ -10,12 +10,18 @@ from .platform import (
     action_target,
     build_module_change_command,
     build_module_preflight_command,
-    build_status_command as build_platform_status_command,
     compatibility_error,
-    load_backup as load_platform_backup,
     parse_platform_status,
     snapshot_for_backup,
     validate_backup_target,
+)
+from .platform import (
+    build_status_command as build_platform_status_command,
+)
+from .platform import (
+    load_backup as load_platform_backup,
+)
+from .platform import (
     write_backup as write_platform_backup,
 )
 from .privacy import REDACTED_HOST, host_fingerprint, redact_sensitive_text

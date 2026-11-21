@@ -7,7 +7,6 @@ from asustor_nas_cli.security import (
     compare_reports,
 )
 
-
 HOST = "192.0.2.10"
 PORTAL_VERIFIED = {
     "http_status": 200,

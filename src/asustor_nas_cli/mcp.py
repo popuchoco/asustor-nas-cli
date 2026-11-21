@@ -10,15 +10,15 @@ from types import SimpleNamespace
 from . import __version__
 from .client import CliError, inspect_adm_portal, run_ssh
 from .commands import DOCTOR_SECTIONS, build_remote_command, parse_sections
+from .platform import build_status_command as build_platform_status_command
+from .platform import parse_platform_status
+from .privacy import REDACTED_HOST, host_fingerprint, redact_sensitive_text
 from .security import (
     build_incident_report,
     build_scan_command,
     build_security_audit,
 )
 from .topology import parse_disk_topology
-from .platform import build_status_command as build_platform_status_command, parse_platform_status
-from .privacy import REDACTED_HOST, host_fingerprint, redact_sensitive_text
-
 
 PROTOCOL_VERSIONS = ("2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05")
 READ_ONLY = {

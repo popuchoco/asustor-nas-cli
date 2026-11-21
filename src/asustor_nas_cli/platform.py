@@ -7,7 +7,6 @@ from pathlib import Path
 
 from .privacy import REDACTED_HOST, host_fingerprint
 
-
 DRIVER_MODULES = ("asustor", "asustor_it87", "asustor_gpio_it87")
 LOAD_ORDER = ("asustor_gpio_it87", "asustor_it87", "asustor")
 UNLOAD_ORDER = ("asustor", "asustor_it87", "asustor_gpio_it87")

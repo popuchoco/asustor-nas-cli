@@ -2,7 +2,6 @@
 
 import re
 
-
 SECTOR_BYTES = 512
 
 

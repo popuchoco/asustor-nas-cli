@@ -2,7 +2,6 @@ import unittest
 
 from asustor_nas_cli.topology import parse_disk_topology
 
-
 SAMPLE = """__ADM_SYSFS_BEGIN__
 __ADM_DISK__=sda|WDC WD5000HHTZ-0|976773168
 __ADM_DISK__=sdb|WDC WD5000HHTZ-0|976773168

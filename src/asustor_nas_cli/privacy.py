@@ -5,7 +5,6 @@ import ipaddress
 import re
 from pathlib import Path
 
-
 REDACTED_HOST = "NAS"
 REDACTED_ACCOUNT = "[redacted-account]"
 REDACTED_IP = "[redacted-ip]"

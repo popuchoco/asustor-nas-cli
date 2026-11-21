@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from asustor_nas_cli.cli import build_parser
 from asustor_nas_cli.platform import (
     DRIVER_MODULES,
     action_target,
@@ -16,8 +17,6 @@ from asustor_nas_cli.platform import (
     validate_backup_target,
     write_backup,
 )
-from asustor_nas_cli.cli import build_parser
-
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "as202te_live_profile.json"
 
