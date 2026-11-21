@@ -11,6 +11,8 @@
 | ASUSTOR AS5402T, ADM 5.1.4 | Reference-project report only | Not tested by this CLI |
 | Other ASUSTOR models / ADM releases | None | Not yet verified |
 
+CI also tests package installation and the `adm --version` entry point on Windows and macOS (Python 3.10 and 3.13). This validates workstation packaging only; it does not claim live NAS compatibility on those operating systems.
+
 The AS-202TE HTTPS certificate used during the live check was not trusted. Checks performed with `--insecure` explicitly report that TLS was not verified.
 
 The normalized, reviewed facts from that device are kept in [`tests/fixtures/as202te_live_profile.json`](../tests/fixtures/as202te_live_profile.json). It is a profile summary rather than a raw command transcript; it contains no host address, account, password, MAC address, or disk serial. No Linux 6.1+ ASUSTOR device was available for this review, so the DMI allowlist has not been live-validated by this CLI and no module mutation has been attempted.

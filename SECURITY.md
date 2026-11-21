@@ -21,6 +21,7 @@ Kernel module actions are a separate, explicitly mutating feature:
 - Use only the fixed `asustor`, `asustor_it87`, and `asustor_gpio_it87` module names. A loaded `it87` module blocks operations that would load `asustor_it87`.
 - Use `modprobe`; never use forced kernel-module removal. Remote privilege escalation is non-interactive (`sudo -n`) so it cannot unexpectedly wait for or transmit a password.
 - Keep the backup on the operator's machine. `--reset` restores the recorded module loaded-state only when the host, kernel release, and DMI identity match.
+- Backup loading is size-limited to 1 MB and rejects malformed module state before any remote module operation.
 
 Loading or unloading a hardware driver can affect GPIO-backed LEDs/buttons, fan monitoring, or cooling behavior and may destabilize the NAS. A module-state backup is not a firmware or data backup; reset is best-effort and cannot recover from a kernel crash or hardware damage. Do not perform these operations without a separate, tested NAS data backup and a recovery path.
 
@@ -31,3 +32,5 @@ The DeadBolt audit and scan are narrow, versioned checks, not antivirus or incid
 ## Reporting a vulnerability
 
 Please use GitHub's private vulnerability reporting for this repository when available. Do not include NAS passwords, private keys, public IPs, serial numbers, or unredacted incident artifacts in public issues.
+
+See the code-level [security review](docs/SECURITY_REVIEW.md) for the reviewed scope and remaining hardware-validation limits.

@@ -38,7 +38,7 @@ MCP and ordinary inspection commands are read-only. Kernel-module load/unload is
 
 ## Guarded platform-module flow
 
-1. Read kernel release, DMI vendor/product, and loaded states for the three managed modules plus the conflicting `it87` module.
+1. Read kernel release, DMI vendor/product, and loaded states for the three managed modules plus the conflicting `it87` module. The parser accepts state fields only inside one complete status frame and rejects duplicate or invalid state markers.
 2. Require Linux 6.1 or newer and a DMI pair in the explicit preflight allowlist. The driver still performs its own hardware probing after module load.
 3. Resolve the fixed plan with `modprobe -n` dry-run calls; abort before confirmation and backup if module resolution fails.
 4. Require `--confirm-risk`; unless `--force` is set, require the operator to type the exact action and masked host fingerprint.
@@ -47,6 +47,8 @@ MCP and ordinary inspection commands are read-only. Kernel-module load/unload is
 7. Read module state again and report whether it matches the requested target. If a partial operation fails, the local backup remains available for `--reset`.
 
 The backup captures loaded/unloaded state only. It does not capture driver binaries, system data, firmware settings, LED values, fan PWM values, or sensor calibration. A reset is not a complete rollback and cannot promise hardware safety after a failed kernel-driver operation.
+
+The local backup reader rejects malformed data and files over 1 MB before sending any module-change command.
 
 ## Design constraints
 

@@ -4,7 +4,7 @@
 
 以 Python 撰寫的 ASUSTOR ADM NAS 安全優先命令列工具，提供唯讀診斷、磁碟拓樸、DeadBolt 勒索病毒防護檢查，以及有相容性閘門的核心模組管理。指令名稱為 `adm`，取自 ASUSTOR 作業系統名稱。
 
-[English](README.md) · [指令規格](docs/CLI_SPEC.md) · [相容性](docs/COMPATIBILITY.md) · [安全政策](SECURITY.md) · [參考專案比對](docs/REFERENCE_REVIEW.md)
+[English](README.md) · [指令規格](docs/CLI_SPEC.md) · [相容性說明](docs/COMPATIBILITY.md) · [疑難排解](docs/TROUBLESHOOTING.md) · [安全政策](SECURITY.md) · [研究來源與授權](docs/RESEARCH_AND_LICENSES.md)
 
 ## 功能
 
@@ -142,20 +142,14 @@ adm platform module --reset --host NAS-IP --user nas-user \
 
 伺服器需要 SSH 金鑰／agent 驗證，只執行固定 SSH 指令並提供唯讀工具。新增 SMART、溫度觀察，以及不連線 NAS、直接比對兩份報告物件的 `adm_security_compare`。`adm_platform_status` 只讀取支援狀態；MCP 不提供載入、卸載或重設模組功能。更多細節見[指令規格](docs/CLI_SPEC.md#mcp-interface)。
 
-## 相容性與實機驗證
-
-本專案已在 ASUSTOR AS-202TE、ADM 3.5.9.RWM1、Linux 3.4.26（i686）、BusyBox 1.19.3 上測試唯讀診斷、安全檢查與磁碟拓樸。由於此機型／核心版本不在 platform driver 公開支援範圍，核心模組變更會被拒絕。
-
-已檢視的去識別化機型摘要位於 [`tests/fixtures/as202te_live_profile.json`](tests/fixtures/as202te_live_profile.json)。目前沒有 Linux 6.1 以上的 ASUSTOR 機型可供實機驗證，因此本 CLI 尚未以 live 測試確認 DMI 白名單。
-
-本專案尚未宣稱測試 ADM 5.x 或其他 ASUSTOR 機種。請見[相容性說明](docs/COMPATIBILITY.md)，了解 CLI 實測範圍和參考專案能力的差異。
-
 ## 專案規格與貢獻
 
 指令結構參照 [Synology NAS CLI](https://github.com/akari-sora/synology-nas-cli) 與 [QNAP NAS CLI](https://github.com/popuchoco/qnap-nas-cli)：以作業系統名稱為指令開頭、提供結構化報告、MCP、明確安全邊界、相容性說明與可重用文件。[參考專案比對](docs/REFERENCE_REVIEW.md)說明三個 ASUSTOR 專案的採納與排除範圍。
 
-另見[架構](docs/ARCHITECTURE.md)、[貢獻指南](CONTRIBUTING.md)、[發布與安裝](docs/PUBLISHING.md)、[更新紀錄](CHANGELOG.md)和[安全政策](SECURITY.md)。
+另見[架構](docs/ARCHITECTURE.md)、[疑難排解](docs/TROUBLESHOOTING.md)、[發布檢查清單](docs/RELEASE_CHECKLIST.md)、[安全檢視](docs/SECURITY_REVIEW.md)、[貢獻指南](CONTRIBUTING.md)、[發布與安裝](docs/PUBLISHING.md)、[更新紀錄](CHANGELOG.md)和[安全政策](SECURITY.md)。
 
-## 授權
+## 授權、研究來源與商標
 
-MIT，詳見 [LICENSE](LICENSE)。
+本專案原始程式碼與文件採 MIT 授權，詳見 [LICENSE](LICENSE)。研究來源與授權檢視記錄於[研究來源與授權](docs/RESEARCH_AND_LICENSES.md)，設計決策則記錄於[參考專案比對](docs/REFERENCE_REVIEW.md)。
+
+本專案為獨立社群專案，與 ASUSTOR Inc. 無隸屬、背書或贊助關係。ASUSTOR、ADM 及 ASUSTOR 產品與機型名稱均為各自權利人的商標。

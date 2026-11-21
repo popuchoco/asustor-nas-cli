@@ -12,6 +12,7 @@ LOAD_ORDER = ("asustor_gpio_it87", "asustor_it87", "asustor")
 UNLOAD_ORDER = ("asustor", "asustor_it87", "asustor_gpio_it87")
 CONFLICT_MODULES = ("it87",)
 MINIMUM_KERNEL = (6, 1)
+MAX_BACKUP_BYTES = 1_000_000
 SUPPORTED_DMI = {
     ("ASUSTOR Inc.", "AS-6xxT"),
     ("Insyde", "AS61xx"),
@@ -43,10 +44,24 @@ def build_status_command():
 
 
 def parse_platform_status(output, host=None, ssh_port=None, host_id=None):
+    if not isinstance(output, str):
+        output = ""
     lines = output.splitlines()
+    marker_pairs = (
+        ("__ADM_PLATFORM_BEGIN__", "__ADM_PLATFORM_END__"),
+        ("__ADM_PLATFORM_RESULT_BEGIN__", "__ADM_PLATFORM_RESULT_END__"),
+    )
+    complete_pairs = []
+    for begin, end in marker_pairs:
+        begin_indexes = [index for index, line in enumerate(lines) if line == begin]
+        end_indexes = [index for index, line in enumerate(lines) if line == end]
+        if len(begin_indexes) == 1 and len(end_indexes) == 1 and begin_indexes[0] < end_indexes[0]:
+            complete_pairs.append((begin_indexes[0], end_indexes[0]))
+    complete_marker_pair = len(complete_pairs) == 1
+    content = lines[complete_pairs[0][0] + 1 : complete_pairs[0][1]] if complete_marker_pair else []
     fields = {}
     duplicate_field = False
-    for line in lines:
+    for line in content:
         if line.startswith("__ADM_PLATFORM_") and "=" in line:
             key, value = line.split("=", 1)
             duplicate_field = duplicate_field or key in fields
@@ -58,7 +73,10 @@ def parse_platform_status(output, host=None, ssh_port=None, host_id=None):
         module: fields.get(f"__ADM_PLATFORM_MODULE_{module}__") == "1"
         for module in (*DRIVER_MODULES, *CONFLICT_MODULES)
     }
-    version_match = re.match(r"^(\d+)\.(\d+)(?:\.(\d+))?", kernel)
+    version_match = re.fullmatch(
+        r"([0-9]{1,4})\.([0-9]{1,4})(?:\.([0-9]{1,4}))?(?:[-+~][A-Za-z0-9._+~-]+)?",
+        kernel,
+    )
     kernel_version = tuple(int(part or 0) for part in version_match.groups()) if version_match else None
     kernel_supported = bool(kernel_version and kernel_version[:2] >= MINIMUM_KERNEL)
     dmi_allowlisted = (vendor, product) in SUPPORTED_DMI
@@ -68,17 +86,16 @@ def parse_platform_status(output, host=None, ssh_port=None, host_id=None):
         "__ADM_PLATFORM_DMI_product_name__",
         *(f"__ADM_PLATFORM_MODULE_{name}__" for name in (*DRIVER_MODULES, *CONFLICT_MODULES)),
     }
-    marker_pairs = (
-        ("__ADM_PLATFORM_BEGIN__", "__ADM_PLATFORM_END__"),
-        ("__ADM_PLATFORM_RESULT_BEGIN__", "__ADM_PLATFORM_RESULT_END__"),
+    module_fields_valid = all(
+        fields.get(f"__ADM_PLATFORM_MODULE_{name}__") in {"0", "1"}
+        for name in (*DRIVER_MODULES, *CONFLICT_MODULES)
     )
-    complete_marker_pair = any(
-        lines.count(begin) == 1
-        and lines.count(end) == 1
-        and lines.index(begin) < lines.index(end)
-        for begin, end in marker_pairs
+    markers_ok = (
+        required_markers.issubset(fields)
+        and complete_marker_pair
+        and not duplicate_field
+        and module_fields_valid
     )
-    markers_ok = required_markers.issubset(fields) and complete_marker_pair and not duplicate_field
     conflicts = [name for name in CONFLICT_MODULES if modules[name]]
     preflight_passed = markers_ok and kernel_supported and dmi_allowlisted and not conflicts
     return {
@@ -135,6 +152,11 @@ def build_module_change_command(target_states):
         (
             "printf '__ADM_PLATFORM_RESULT_BEGIN__\\n'",
             "printf '__ADM_PLATFORM_KERNEL__='; uname -r",
+            "for dmi_field in sys_vendor product_name; do",
+            "  dmi_value=",
+            '  [ -r "/sys/class/dmi/id/$dmi_field" ] && dmi_value=$(cat "/sys/class/dmi/id/$dmi_field" 2>/dev/null) || :',
+            '  printf "__ADM_PLATFORM_DMI_%s__=%s\\n" "$dmi_field" "$dmi_value"',
+            "done",
         )
     )
     for module in (*DRIVER_MODULES, *CONFLICT_MODULES):
@@ -202,9 +224,15 @@ def write_backup(path, backup):
 
 def load_backup(path):
     try:
-        with Path(path).expanduser().open("r", encoding="utf-8") as backup_file:
-            backup = json.load(backup_file)
-    except (OSError, json.JSONDecodeError) as error:
+        with Path(path).expanduser().open("rb") as backup_file:
+            payload = backup_file.read(MAX_BACKUP_BYTES + 1)
+    except OSError as error:
+        raise ValueError("Could not read the platform backup; check the local file and JSON format") from error
+    if len(payload) > MAX_BACKUP_BYTES:
+        raise ValueError("Platform backup exceeds the 1 MB size limit")
+    try:
+        backup = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as error:
         raise ValueError("Could not read the platform backup; check the local file and JSON format") from error
     if not isinstance(backup, dict) or backup.get("schema_version") != 1 or backup.get("report_type") != "platform-module-backup":
         raise ValueError("Unsupported platform module backup format")

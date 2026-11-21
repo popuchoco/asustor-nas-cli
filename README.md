@@ -4,7 +4,7 @@
 
 Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt ransomware checks, and guarded platform-driver module management. The command is named `adm`, after ASUSTOR's operating system.
 
-[繁體中文](README.zh-TW.md) · [Command specification](docs/CLI_SPEC.md) · [Compatibility](docs/COMPATIBILITY.md) · [Security](SECURITY.md) · [Reference review](docs/REFERENCE_REVIEW.md)
+[繁體中文](README.zh-TW.md) · [Command specification](docs/CLI_SPEC.md) · [Compatibility notes](docs/COMPATIBILITY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Security](SECURITY.md) · [Research and licenses](docs/RESEARCH_AND_LICENSES.md)
 
 ## What it does
 
@@ -142,20 +142,14 @@ Configure your MCP client to launch `adm mcp` and provide its environment:
 
 The server requires SSH key/agent authentication, uses fixed SSH commands, and exposes read-only tools only. It includes SMART and temperature observations plus `adm_security_compare`, which compares two report objects without connecting to the NAS. `adm_platform_status` is read-only; module load, unload, and reset are not available over MCP. See [MCP and JSON interface details](docs/CLI_SPEC.md#mcp-interface).
 
-## Compatibility and test device
-
-The CLI's live-tested baseline is ASUSTOR AS-202TE, ADM 3.5.9.RWM1, Linux 3.4.26 (i686), BusyBox 1.19.3. Read-only diagnostics, security checks, and topology parsing were checked against this unit. Kernel module changes are blocked because this model/kernel is outside the platform driver's published support range.
-
-The reviewed, redacted profile summary is available at [`tests/fixtures/as202te_live_profile.json`](tests/fixtures/as202te_live_profile.json). No Linux 6.1+ ASUSTOR unit was available, so the DMI allowlist has not been live-validated by this CLI.
-
-ADM 5.x and other ASUSTOR models are not claimed as tested by this project. See [compatibility notes](docs/COMPATIBILITY.md) for the distinction between this CLI's verified coverage and capabilities described by the reference projects.
-
 ## Project design and contribution
 
 The CLI follows the product conventions of [synology-nas-cli](https://github.com/akari-sora/synology-nas-cli) and [qnap-nas-cli](https://github.com/popuchoco/qnap-nas-cli): OS-named command, structured reports, MCP, explicit safety boundaries, compatibility notes, and reusable docs. The [reference review](docs/REFERENCE_REVIEW.md) explains what was adopted and what was excluded from the three ASUSTOR projects.
 
-See [architecture](docs/ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [publishing and installation](docs/PUBLISHING.md), [change log](CHANGELOG.md), and [security policy](SECURITY.md).
+See [architecture](docs/ARCHITECTURE.md), [troubleshooting](docs/TROUBLESHOOTING.md), [release checklist](docs/RELEASE_CHECKLIST.md), [security review](docs/SECURITY_REVIEW.md), [contributing](CONTRIBUTING.md), [publishing and installation](docs/PUBLISHING.md), [change log](CHANGELOG.md), and [security policy](SECURITY.md).
 
-## License
+## License and trademarks
 
-MIT. See [LICENSE](LICENSE).
+This project's original code and documentation are licensed under MIT; see [LICENSE](LICENSE). Research sources and the license review are recorded in [Research and licenses](docs/RESEARCH_AND_LICENSES.md), with design decisions in the [reference review](docs/REFERENCE_REVIEW.md).
+
+This is an independent community project. It is not affiliated with, endorsed by, or sponsored by ASUSTOR Inc. ASUSTOR, ADM, and ASUSTOR product and model names are trademarks of their respective rights holders.

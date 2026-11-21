@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0 — 2026-11-21
+
+- Harden platform-status parsing by limiting fields to complete marker frames and rejecting malformed module states, non-text output, and extreme kernel-version values.
+- Include kernel and DMI markers in post-operation verification so guarded module changes can be accurately reported.
+- Limit local module-backup input to 1 MB and reject oversized or deeply nested JSON.
+- Add Windows/macOS package-install CI, troubleshooting guidance, a security review, and a release checklist.
+- Remove the standalone compatibility section from both READMEs; add license, research-source, trademark, and non-affiliation links and notices.
+- Keep the Linux 6.1+ live hardware test out of scope because no such ASUSTOR unit is available; the DMI allowlist remains unvalidated on a live device.
+
 ## 0.6.0 — 2026-11-21
 
 - Add `adm temperature` for read-only Linux thermal-zone temperature observations; no model-specific thresholds or health verdicts are applied.

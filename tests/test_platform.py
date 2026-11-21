@@ -70,6 +70,23 @@ class PlatformModuleTests(unittest.TestCase):
         )
         self.assertEqual(parse_platform_status(malformed)["coverage"], "partial")
 
+    def test_platform_fields_outside_markers_and_invalid_module_values_fail_closed(self):
+        complete = status_output()
+        spoofed = complete + "\n__ADM_PLATFORM_DMI_product_name__=Jasper Lake Client Platform"
+        invalid_module = complete.replace("__ADM_PLATFORM_MODULE_asustor__=0", "__ADM_PLATFORM_MODULE_asustor__=unknown")
+        self.assertEqual(parse_platform_status(spoofed)["coverage"], "complete")
+        self.assertEqual(parse_platform_status(invalid_module)["coverage"], "partial")
+
+    def test_non_text_and_extreme_kernel_values_fail_closed(self):
+        self.assertEqual(parse_platform_status(None)["coverage"], "partial")
+        extreme_kernel = status_output().replace("6.8.0", "9" * 5000)
+        self.assertFalse(parse_platform_status(extreme_kernel)["kernel_supported"])
+
+    def test_module_operation_result_contains_required_dmi_observations(self):
+        command = build_module_change_command({name: True for name in DRIVER_MODULES})
+        self.assertIn("__ADM_PLATFORM_DMI_%s__=%s", command)
+        self.assertIn("/sys/class/dmi/id/$dmi_field", command)
+
     def test_module_operation_result_markers_are_accepted(self):
         output = status_output().replace(
             "__ADM_PLATFORM_BEGIN__", "__ADM_PLATFORM_RESULT_BEGIN__"
@@ -107,6 +124,20 @@ class PlatformModuleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "host"):
             validate_backup_target(backup, other_host)
         self.assertEqual(action_target("reset", report, backup), target)
+
+    def test_backup_loader_rejects_oversized_local_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "oversized.json"
+            path.write_bytes(b" " * 1_000_001)
+            with self.assertRaisesRegex(ValueError, "1 MB size limit"):
+                load_backup(path)
+
+    def test_backup_loader_rejects_deeply_nested_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "nested.json"
+            path.write_bytes(b"[" * 5000 + b"]" * 5000)
+            with self.assertRaisesRegex(ValueError, "Could not read the platform backup"):
+                load_backup(path)
 
     def test_status_command_has_no_mutating_operations(self):
         command = build_status_command()

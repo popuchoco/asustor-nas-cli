@@ -13,7 +13,7 @@ dependencies = []
 
 keywords = ["asustor", "adm", "nas", "cli", "mcp", "security", "ransomware", "deadbolt"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",

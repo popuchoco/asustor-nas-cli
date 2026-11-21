@@ -49,6 +49,7 @@ adm platform module --reset  --backup FILE --confirm-risk [--force] [SSH options
 - `--unload` removes those modules in dependency order: `asustor`, `asustor_it87`, `asustor_gpio_it87`.
 - Before load/unload, `--backup FILE` must name a new local path. Existing files are never overwritten. The CLI snapshots managed module states, host, SSH port, kernel release, and DMI identity before the remote change.
 - `--reset` reads a prior backup and restores only the recorded loaded/unloaded states. Host, kernel release and DMI identity must still match. Before reset, a second snapshot of the current state is created at `<backup>.before-reset.json` (or the path supplied with `--rollback-backup`); an existing file there blocks the reset rather than being overwritten.
+- Reset backup input is capped at 1 MB; malformed or oversized files are rejected before any remote module operation.
 - All operations need `--confirm-risk`. Without `--force`, the operator must type `LOAD NAS <host_id>`, `UNLOAD NAS <host_id>`, or `RESET NAS <host_id>` exactly. `--force` skips that prompt only.
 - Before confirmation and backup, `modprobe -n` must resolve the fixed module plan; this dry-run makes no module changes.
 - Operations require Linux >= 6.1, a DMI allowlist match and no conflicting `it87` module when `asustor_it87` needs to be loaded. The operating account must be root or have non-interactive `sudo -n` access.

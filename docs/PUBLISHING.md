@@ -10,6 +10,8 @@ python -m build --sdist --wheel
 python -m twine check --strict dist/*
 ```
 
+Use the [release checklist](RELEASE_CHECKLIST.md) before tagging a version.
+
 The GitHub Actions workflow at `.github/workflows/release.yml` runs those checks for version tags beginning with `v` and stores the distributions as a workflow artifact. A tag push builds artifacts but does not publish to a package index.
 
 ## PyPI Trusted Publisher setup
@@ -22,7 +24,7 @@ Publishing is intentionally a separate, manually dispatched workflow step. Befor
 4. Push a reviewed `vX.Y.Z` tag. Confirm the release workflow built and checked both artifacts.
 5. Run `Release package` with that tag selected and set `publish` to `true`.
 
-The workflow uses PyPI's OIDC Trusted Publishing permission and does not require a PyPI API token or repository secret. A tag push alone never publishes. Publishing to PyPI makes the package publicly downloadable even though this source repository is private; review the source and package contents before enabling the publish input.
+The workflow uses PyPI's OIDC Trusted Publishing permission and does not require a PyPI API token or repository secret. A tag push alone never publishes. Publishing to PyPI makes the package publicly downloadable; review the source and package contents before enabling the publish input.
 
 ## Installing after publication
 
