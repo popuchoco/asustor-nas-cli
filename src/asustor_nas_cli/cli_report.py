@@ -44,12 +44,15 @@ def run_report_compare(args):
         report = compare_health_reports(before, after)
     except ValueError as error:
         if args.json:
-            print_json({"command": "report compare", "ok": False, "error": str(error)})
+            print_json(
+                {"command": "report compare", "ok": False, "error": str(error)},
+                compact=args.compact_json,
+            )
         else:
             print(f"adm report compare: {error}", file=sys.stderr)
         return 1
     if args.json:
-        print_json(report)
+        print_json(report, compact=args.compact_json)
     else:
         print(format_report_comparison(report))
     return 0

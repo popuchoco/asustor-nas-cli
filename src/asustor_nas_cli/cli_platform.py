@@ -75,7 +75,7 @@ def run_platform(args):
         if args.platform_action == "status":
             report = _read_platform_status(args)
             if args.json:
-                print_json(report)
+                print_json(report, compact=args.compact_json)
             else:
                 print(_format_platform_status(report))
             return 0 if report["coverage"] == "complete" else 1
@@ -152,7 +152,7 @@ def run_platform(args):
             "note": "Use adm platform module --reset --backup FILE to restore the saved loaded-module state.",
         }
         if args.json:
-            print_json(report)
+            print_json(report, compact=args.compact_json)
         else:
             print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0 if ok else 1
@@ -160,7 +160,16 @@ def run_platform(args):
         safe_error = redact_sensitive_text(error, args.host, getattr(args, "user", None))
         if args.json:
             command = "platform status" if args.platform_action == "status" else "platform module"
-            print_json({"command": command, "host": REDACTED_HOST, "host_id": host_fingerprint(args.host), "ok": False, "error": safe_error})
+            print_json(
+                {
+                    "command": command,
+                    "host": REDACTED_HOST,
+                    "host_id": host_fingerprint(args.host),
+                    "ok": False,
+                    "error": safe_error,
+                },
+                compact=args.compact_json,
+            )
         else:
             print(f"adm: {safe_error}", file=sys.stderr)
         return 1

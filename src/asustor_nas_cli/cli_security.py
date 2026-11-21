@@ -44,7 +44,7 @@ def run_security_audit(args):
         host_id=host_fingerprint(args.host),
     )
     if args.json:
-        print_json(report)
+        print_json(report, compact=args.compact_json)
     else:
         print(format_audit(report))
     if report["summary"]["counts"]["fail"]:
@@ -95,7 +95,7 @@ def run_incident_scan(args):
         host_id=host_fingerprint(args.host),
     )
     if args.json:
-        print_json(report)
+        print_json(report, compact=args.compact_json)
     else:
         print(format_incident(report))
     if report["summary"]["state"] == "indicators_observed":
@@ -109,12 +109,15 @@ def run_security_compare(args):
         report = compare_reports(load_report(args.before), load_report(args.after))
     except ValueError as error:
         if args.json:
-            print_json({"command": "security compare", "ok": False, "error": str(error)})
+            print_json(
+                {"command": "security compare", "ok": False, "error": str(error)},
+                compact=args.compact_json,
+            )
         else:
             print(f"adm: {error}", file=sys.stderr)
         return 1
     if args.json:
-        print_json(report)
+        print_json(report, compact=args.compact_json)
     else:
         print(format_comparison(report))
     return 0

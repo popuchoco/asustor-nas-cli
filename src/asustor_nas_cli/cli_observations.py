@@ -29,7 +29,7 @@ def run_observation(args):
         host_id=host_fingerprint(args.host),
     )
     if args.json:
-        print_json(report)
+        print_json(report, compact=args.compact_json)
     else:
         print(format_report(report))
     return 0 if report["coverage"] == "complete" else 1

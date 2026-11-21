@@ -73,18 +73,20 @@ CLI JSON and MCP responses label the device as `NAS` and include a stable `host_
 | `adm incident scan` | Search volume filenames and portal text for bounded DeadBolt indicators |
 | `adm security compare` | Compare two compatible audit or scan JSON reports |
 | `adm report compare` | Compare structured health summaries and risk signals from two runs |
-| `adm report render` | Render a saved health summary or risk-signals JSON report as Markdown, offline |
+| `adm report render` | Render supported diagnostic, security, incident, platform, and observation reports as Markdown, offline |
 | `adm platform status` | Read kernel, DMI, and platform-driver module state |
 | `adm platform module --load/--unload/--reset` | Guarded module lifecycle control on verified compatible Linux hosts |
 | `adm mcp` | Serve read-only MCP tools over stdio |
 
-All NAS observation commands support `--json`. JSON reports use `schema_version: 1`; supported report schemas are in [`schemas/`](schemas/). Command exit codes are documented in the [CLI specification](docs/CLI_SPEC.md).
+NAS observation and comparison commands support `--json`; use `--compact-json` for one-line output (it implies `--json`). JSON reports use `schema_version: 1`; supported report schemas are in [`schemas/`](schemas/). Command exit codes are documented in the [CLI specification](docs/CLI_SPEC.md).
 
 `adm report compare --before yesterday.json --after today.json` compares saved health or risk-summary reports offline. It requires the same report type and host fingerprint, detects changed structured fields and risk signals, and marks missing observations as not reobserved when the later coverage is incomplete.
 
-Render a structured report with `adm report render --input health.json`; use `--input -` to read JSON from standard input. It accepts version-1 `diagnostic-summary` and `risk-signals` reports up to 1 MB, writes at most 2 MB of Markdown to stdout, and never connects to the NAS. Raw SSH `sections` are omitted. Host labels, IP/MAC addresses, and fields named for accounts or secrets are redacted; review remaining operational details before sharing.
+Render a structured report with `adm report render --input health.json`; use `--input -` to read JSON from standard input. It accepts supported schema-v1 diagnostic, security, incident, platform, topology, SMART, temperature, observation, and comparison reports up to 1 MB, writes at most 2 MB of Markdown to stdout, and never connects to the NAS. Raw SSH `sections` are omitted, paths are redacted, and host labels, IP/MAC addresses, and fields named for accounts or secrets are redacted. Review remaining operational details before sharing.
 
 `--summary` adds a versioned `diagnostic-summary` JSON report and keeps the original command output in `sections`. `adm health --summary` also collects SMART, thermal-zone, service-process, UPS, and TCP-state observations. Service counts, UPS values, and connection counts do not add risk findings or change the health exit-code policy. Its default temperature warning is a generic, adjustable 80 °C advisory; sensor IDs do not identify a component, so this is not a model-specific thermal-health verdict. `--exit-on-warning` opts into the summary's recommended code: `2` for detected RAID/SMART/temperature findings, `1` for incomplete coverage, and `0` for complete observations without findings.
+
+For scheduled checks, `adm health --summary --exit-on-warning --compact-json` prints one JSON line and returns `2` for a detected finding, `1` for incomplete coverage, or `0` for complete observations without findings. Save the output and exit code separately when scheduling this command.
 
 `adm smart` runs only `smartctl -H -n standby` for supported block-device names. It does not start SMART self-tests or include disk serials/attributes; sleeping drives may be reported as unknown. A live read-only smoke on the AS-202TE saw two supported devices, both with unknown health and partial coverage, so it does not establish drive health.
 

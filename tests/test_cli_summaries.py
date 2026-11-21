@@ -5,7 +5,7 @@ from argparse import Namespace
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
-from asustor_nas_cli.cli import run_health
+from asustor_nas_cli.cli import main, run_health
 from asustor_nas_cli.cli_parser import build_parser
 from asustor_nas_cli.commands import DOCTOR_SECTIONS, HEALTH_OBSERVATION_SECTIONS
 from asustor_nas_cli.smart_health import parse_smart_health_output
@@ -13,6 +13,22 @@ from asustor_nas_cli.temperature import parse_temperature_output
 
 
 class SummaryCliTests(unittest.TestCase):
+    def test_compact_json_is_single_line_and_implies_json(self):
+        output = io.StringIO()
+        with (
+            patch(
+                "sys.argv",
+                ["adm", "status", "--host", "nas.example", "--user", "nas-user", "--compact-json"],
+            ),
+            patch("asustor_nas_cli.cli.run_ssh_sections", return_value={"system": "kernel: Linux"}),
+            redirect_stdout(output),
+        ):
+            exit_code = main()
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(len(output.getvalue().splitlines()), 1)
+        self.assertEqual(json.loads(output.getvalue())["sections"]["system"], "kernel: Linux")
+
     def test_summary_options_are_available_on_the_expected_commands(self):
         parser = build_parser()
         status = parser.parse_args(["status", "--host", "nas.example", "--user", "nas-user", "--summary"])
@@ -65,6 +81,7 @@ class SummaryCliTests(unittest.TestCase):
             identity_file=None,
             summary=True,
             json=True,
+            compact_json=False,
             exit_on_warning=True,
             temperature_warning_celsius=80.0,
         )

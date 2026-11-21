@@ -9,7 +9,8 @@
 - SSH key path comes from `ASUSTOR_SSH_IDENTITY_FILE` or `--identity-file`.
 - HTTPS validation is enabled by default. `--ca` selects a PEM CA file; `--insecure` disables validation for that request. The options are mutually exclusive.
 - `--json` emits UTF-8 JSON for command results. Human output is for display and is not a stable parsing interface.
-- `report render --input FILE` reads a local schema-v1 `diagnostic-summary` or `risk-signals` JSON report (maximum 1 MB) and writes at most 2 MB of Markdown to stdout. `--input -` reads stdin. This offline command does not connect to a NAS, omits raw SSH `sections`, and redacts host labels, IP/MAC addresses, and account/secret fields.
+- `--compact-json` selects single-line JSON and implies `--json`; it is available on JSON-capable observation, comparison, and platform commands.
+- `report render --input FILE` reads a local schema-v1 supported report (maximum 1 MB) and writes at most 2 MB of Markdown to stdout. `--input -` reads stdin. This offline command does not connect to a NAS, omits raw SSH `sections`, redacts path fields, host labels, IP/MAC addresses, and account/secret fields.
 - `status`, `storage`, and `raid` accept `--summary` to add a structured `diagnostic-summary` while retaining the raw SSH section in `sections`. `raid` also accepts `--exit-on-warning` to return the summary's recommended code.
 - `health --summary` adds structured system, storage, RAID, SMART, temperature, service-process, UPS, and TCP-state observations while retaining the raw sections. Service/process counts, UPS values, and connection counts do not create risk findings or affect the health exit-code policy. It also reports whether the raw network and disk-list sections were returned.
 - `health --summary --temperature-warning-celsius C` changes the generic temperature advisory threshold (default `80`). It is not a model-specific safe-temperature limit or health verdict.
@@ -39,10 +40,12 @@
 | `security audit` | ADM portal version + local TCP listeners + operator assertions | `security-audit`, schema v1 |
 | `incident scan` | Bounded filename scan + ADM portal text | `incident-scan`, schema v1 |
 | `security compare` | Two saved audit/scan reports | `comparison`, schema v1 |
-| `report render` | Saved diagnostic-summary or risk-signals JSON; local and offline | Markdown text |
+| `report render` | Saved diagnostic, security, incident, platform, topology, SMART, temperature, observation, or comparison JSON; local and offline | Markdown text |
 | `report compare` | Two saved diagnostic-summary or risk-signals reports; local and offline | `report-comparison`, schema v1 |
 | `platform status` | Kernel, DMI, module state; read-only | `platform-status`, schema v1 |
 | `platform module --load/--unload/--reset` | Fixed `modprobe` operations after compatibility gate | `platform-module-operation`, schema v1 |
+
+`report render` accepts `diagnostic-summary`, `risk-signals`, `security-audit`, `incident-scan`, `platform-status`, `disk-topology`, `smart-health`, `temperature-observation`, `service-observations`, `ups-observations`, `connection-observations`, `comparison`, `report-comparison`, and `platform-module-operation`. It omits raw SSH `sections` and redacts paths so incident reports can be rendered without copying full NAS paths into Markdown.
 
 The `diagnostic-summary` schema is versioned independently from the package release. Summary coverage describes the completeness of parsed observations. Missing SMART or temperature support is reported as incomplete/unavailable, not as a passing health check. Raw SSH sections remain available to support review of the derived summary.
 
@@ -108,7 +111,7 @@ For each schema version, required field meaning is stable. Parsers should ignore
 
 Warnings and unknown audit checks return `1`. Disk topology returns `1` when an md array reports degraded membership. `health` returning `0` means its observation commands ran; it does not mean hardware is healthy.
 
-Structured diagnostic summaries normally return `0` after successful collection. Only `raid --exit-on-warning` and `health --summary --exit-on-warning` opt into their `recommended_exit_code`: `2` for a detected finding, `1` for incomplete coverage without a finding, or `0` for complete coverage without a finding. The 80 °C default in `health --summary` is a generic advisory and may not match the NAS model or sensor type.
+Structured diagnostic summaries normally return `0` after successful collection. Only `raid --exit-on-warning` and `health --summary --exit-on-warning` opt into their `recommended_exit_code`: `2` for a detected finding, `1` for incomplete coverage without a finding, or `0` for complete coverage without a finding. Combine `health --summary --exit-on-warning --compact-json` for a one-line scheduled-job result plus a meaningful process exit code. The 80 °C default in `health --summary` is a generic advisory and may not match the NAS model or sensor type.
 
 `adm smart` returns `0` only when every observed supported drive reports a passing SMART health status. It returns `2` when a drive reports a failed status and `1` when the tool, device, or coverage is unavailable or incomplete. The command never starts a SMART self-test.
 

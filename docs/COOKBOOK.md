@@ -18,6 +18,13 @@ adm health --host nas.example --user nas-user --summary --exit-on-warning --json
 $healthExitCode = $LASTEXITCODE
 ```
 
+For a scheduled job that expects one line of JSON, use `--compact-json`; it enables JSON output automatically:
+
+```powershell
+adm health --host nas.example --user nas-user --summary --exit-on-warning --compact-json > .\health.jsonl
+$healthExitCode = $LASTEXITCODE
+```
+
 Interpret the result as follows:
 
 - `0`: all included observations were complete and no configured risk signal was found.
@@ -49,7 +56,16 @@ adm report render --input .\health.json > .\health.md
 $renderExitCode = $LASTEXITCODE
 ```
 
-The Markdown renderer accepts `diagnostic-summary` and `risk-signals` schema-v1 reports up to 1 MB and writes at most 2 MB. It omits raw SSH sections and redacts host labels, IP/MAC addresses, and account/secret fields. Review the remaining operational details before sharing the file.
+The Markdown renderer accepts supported schema-v1 diagnostic, security, incident, platform, topology, SMART, temperature, observation, and comparison reports up to 1 MB and writes at most 2 MB. It omits raw SSH sections and redacts paths, host labels, IP/MAC addresses, and account/secret fields. Review the remaining operational details before sharing the file.
+
+The same offline step can render a prevention audit or incident scan. Incident file paths are redacted in Markdown output:
+
+```powershell
+adm security audit --host nas.example --user nas-user --json > .\audit.json
+adm report render --input .\audit.json > .\audit.md
+adm incident scan --host nas.example --user nas-user --json > .\scan.json
+adm report render --input .\scan.json > .\scan.md
+```
 
 ## Compare today's health summary with yesterday's
 

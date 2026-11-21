@@ -29,7 +29,16 @@ def run_probe(args):
     except CliError as error:
         safe_error = redact_sensitive_text(error, args.host)
         if args.json:
-            print_json({"command": "probe", "host": REDACTED_HOST, "host_id": host_fingerprint(args.host), "ok": False, "error": safe_error})
+            print_json(
+                {
+                    "command": "probe",
+                    "host": REDACTED_HOST,
+                    "host_id": host_fingerprint(args.host),
+                    "ok": False,
+                    "error": safe_error,
+                },
+                compact=args.compact_json,
+            )
         else:
             print(f"adm: {safe_error}", file=sys.stderr)
         return 1
@@ -39,7 +48,7 @@ def run_probe(args):
     result["host_id"] = host_fingerprint(args.host)
     result["ok"] = True
     if args.json:
-        print_json(result)
+        print_json(result, compact=args.compact_json)
     else:
         tls_state = "verified" if result["tls_verified"] else "not verified"
         version = result["adm_version"] or "version unavailable"
@@ -61,7 +70,7 @@ def run_read_command(args):
             host_id=host_fingerprint(args.host),
         )
         if args.json:
-            print_json(report)
+            print_json(report, compact=args.compact_json)
         else:
             print(format_diagnostic_summary(report))
         if getattr(args, "exit_on_warning", False):
@@ -75,7 +84,8 @@ def run_read_command(args):
                 "host_id": host_fingerprint(args.host),
                 "ssh_port": args.port,
                 "sections": sections,
-            }
+            },
+            compact=args.compact_json,
         )
     else:
         print(sections[section_name])
@@ -96,7 +106,7 @@ def run_health(args):
             host_id=host_fingerprint(args.host),
         )
         if args.json:
-            print_json(report)
+            print_json(report, compact=args.compact_json)
         else:
             print(format_diagnostic_summary(report))
         if args.exit_on_warning:
@@ -111,7 +121,8 @@ def run_health(args):
                 "ssh_port": args.port,
                 "ok": True,
                 "sections": sections,
-            }
+            },
+            compact=args.compact_json,
         )
     else:
         for name, output in sections.items():
@@ -124,7 +135,7 @@ def run_disk_topology(args):
     report = parse_disk_topology(sections["disk_topology"], host=REDACTED_HOST)
     report["host_id"] = host_fingerprint(args.host)
     if args.json:
-        print_json(report)
+        print_json(report, compact=args.compact_json)
     else:
         print(format_disk_topology(report))
     return 1 if report["summary"]["state"] == "degraded" else 0
@@ -171,7 +182,7 @@ def run_doctor(args):
                 else {"ok": False, "ssh_port": args.port, "error": ssh_error}
             ),
         }
-        print_json(result)
+        print_json(result, compact=args.compact_json)
     else:
         if probe_result is not None:
             version = probe_result["adm_version"] or "version unavailable"
@@ -253,7 +264,8 @@ def main():
                     "host_id": host_fingerprint(args.host),
                     "ok": False,
                     "error": safe_error,
-                }
+                },
+                compact=args.compact_json,
             )
         else:
             print(f"adm: {safe_error}", file=sys.stderr)

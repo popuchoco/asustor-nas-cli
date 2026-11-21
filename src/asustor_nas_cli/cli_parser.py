@@ -10,6 +10,14 @@ from . import __version__
 from .summaries import DEFAULT_TEMPERATURE_WARNING_CELSIUS
 
 
+class CompactJsonAction(argparse.Action):
+    """Select one-line JSON output and imply the normal JSON output flag."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, True)
+        setattr(namespace, "json", True)
+
+
 def valid_host(value):
     try:
         ipaddress.ip_address(value)
@@ -66,6 +74,13 @@ def add_common_arguments(parser, needs_ssh=False):
         help="NAS IP address or hostname (default: ASUSTOR_HOST)",
     )
     parser.add_argument("--json", action="store_true", help="print JSON output")
+    parser.add_argument(
+        "--compact-json",
+        action=CompactJsonAction,
+        nargs=0,
+        default=False,
+        help="print single-line JSON (implies --json)",
+    )
     parser.add_argument(
         "--timeout",
         type=int,
@@ -177,6 +192,13 @@ def build_parser():
     compare.add_argument("--before", required=True, help="earlier JSON report")
     compare.add_argument("--after", required=True, help="later JSON report")
     compare.add_argument("--json", action="store_true", help="print JSON output")
+    compare.add_argument(
+        "--compact-json",
+        action=CompactJsonAction,
+        nargs=0,
+        default=False,
+        help="print single-line JSON (implies --json)",
+    )
 
     incident = commands.add_parser("incident", help="scan ransomware indicators without changing NAS data")
     incident_commands = incident.add_subparsers(dest="incident_action", required=True)
@@ -199,12 +221,12 @@ def build_parser():
     report = commands.add_parser("report", help="render supported saved reports offline")
     report_commands = report.add_subparsers(dest="report_action", required=True)
     report_render = report_commands.add_parser(
-        "render", help="render a structured JSON summary as Markdown"
+        "render", help="render a supported schema-v1 JSON report as Markdown offline"
     )
     report_render.add_argument(
         "--input",
         required=True,
-        help="diagnostic-summary or risk-signals JSON file, or '-' for stdin",
+        help="supported schema-v1 JSON report file, or '-' for stdin",
     )
     report_compare = report_commands.add_parser(
         "compare", help="compare two saved diagnostic-summary or risk-signals reports"
@@ -212,6 +234,13 @@ def build_parser():
     report_compare.add_argument("--before", required=True, help="earlier JSON report")
     report_compare.add_argument("--after", required=True, help="later JSON report")
     report_compare.add_argument("--json", action="store_true", help="print comparison JSON")
+    report_compare.add_argument(
+        "--compact-json",
+        action=CompactJsonAction,
+        nargs=0,
+        default=False,
+        help="print single-line JSON (implies --json)",
+    )
 
     commands.add_parser("mcp", help="run the read-only MCP server over stdio")
 

@@ -24,7 +24,7 @@ MCP and ordinary inspection commands are read-only. MCP includes raw health obse
 | `cli_parser.py` | `adm` argument parsing and input validation |
 | `cli_support.py` | Shared JSON output and redacted, read-only SSH sections |
 | `cli_security.py` | DeadBolt audit, incident-scan, and security-report comparison handlers |
-| `cli_report.py` / `report_markdown.py` / `report_comparison.py` | Bounded offline rendering and history comparison for structured reports; omits raw SSH sections |
+| `cli_report.py` / `report_markdown.py` / `report_comparison.py` | Bounded offline rendering for supported schema-v1 reports and health-history comparison; omits raw SSH sections and redacts paths |
 | `cli_platform.py` | Guarded platform-module command flow |
 | `cli_smart.py` | Read-only SMART health command handler |
 | `cli_temperature.py` | Read-only thermal-zone temperature handler |

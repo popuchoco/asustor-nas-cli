@@ -42,13 +42,13 @@ def run_temperature(args):
     report, error = collect_temperature(args)
     if error:
         if args.json:
-            print_json(report)
+            print_json(report, compact=args.compact_json)
         else:
             print(f"adm: {error}", file=sys.stderr)
         return 1
 
     if args.json:
-        print_json(report)
+        print_json(report, compact=args.compact_json)
     else:
         print(format_temperature(report))
     return 0 if report["coverage"] == "complete" else 1

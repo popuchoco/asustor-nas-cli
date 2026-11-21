@@ -73,18 +73,20 @@ CLI JSON 和 MCP 回應會以 `NAS` 作為主機標籤，並提供穩定的 `hos
 | `adm incident scan` | 有界限地搜尋資料卷檔名和管理頁 DeadBolt 線索 |
 | `adm security compare` | 比對相容的稽核或掃描 JSON 報告 |
 | `adm report compare` | 離線比對兩次健康摘要與風險訊號 |
-| `adm report render` | 離線將健康摘要或風險訊號 JSON 報告轉成 Markdown |
+| `adm report render` | 離線將支援的診斷、安全、事件、平台與觀察報告轉成 Markdown |
 | `adm platform status` | 讀取核心、DMI 和驅動模組狀態 |
 | `adm platform module --load/--unload/--reset` | 在通過驗證的 Linux 主機上管理驅動模組 |
 | `adm mcp` | 以 stdio 提供唯讀 MCP 工具 |
 
-NAS 資料查詢指令支援 `--json`。JSON 報告使用 `schema_version: 1`，規格位於 [`schemas/`](schemas/)。退出碼見[指令規格](docs/CLI_SPEC.md)。
+NAS 資料查詢與比對指令支援 `--json`；可用 `--compact-json` 輸出單行 JSON（會自動啟用 `--json`）。JSON 報告使用 `schema_version: 1`，規格位於 [`schemas/`](schemas/)。退出碼見[指令規格](docs/CLI_SPEC.md)。
 
-使用 `adm report render --input health.json` 轉換結構化報告；`--input -` 會從標準輸入讀取 JSON。指令只接受 1 MB 以內、schema v1 的 `diagnostic-summary` 和 `risk-signals` 報告，最多輸出 2 MB Markdown，不會連線 NAS，並省略原始 SSH `sections`。主機標籤、IP／MAC 位址，以及名稱含帳號或密鑰用途的欄位會遮蔽；分享前仍請檢查其他維運資訊。
+使用 `adm report render --input health.json` 轉換結構化報告；`--input -` 會從標準輸入讀取 JSON。指令接受 1 MB 以內、schema v1 的診斷、安全、事件、平台、拓樸、SMART、溫度、觀察及比對報告，最多輸出 2 MB Markdown，不會連線 NAS，並省略原始 SSH `sections`。檔案路徑、主機標籤、IP／MAC 位址，以及名稱含帳號或密鑰用途的欄位會遮蔽；分享前仍請檢查其他維運資訊。
 
 使用 `adm report compare --before yesterday.json --after today.json` 離線比對健康摘要或風險訊號。前後報告必須來自相同主機且類型一致；指令會標示風險訊號和結構化欄位的變化。後次覆蓋不完整時，消失的觀察會標為「未重見」，不會當成已排除。
 
 `--summary` 會輸出版本化的 `diagnostic-summary` JSON，並保留原始指令內容在 `sections`。`adm health --summary` 也會唯讀收集 SMART、溫度、服務程序、UPS 與 TCP 狀態觀察。服務數、UPS 值和連線計數不會新增風險訊號，也不會改變健康摘要的退出碼政策。溫度警示預設採通用、可調整的 80°C 提醒值。thermal-zone 編號不會指出感測器所屬元件，因此不代表機型專屬的溫度健康判定。加上 `--exit-on-warning` 後，偵測到 RAID／SMART／溫度問題回傳 `2`，資料不完整回傳 `1`，完整且沒有警示回傳 `0`。
+
+排程巡檢可用 `adm health --summary --exit-on-warning --compact-json`，以單行 JSON 輸出結果並依觀察狀態回傳退出碼：有警示為 `2`、涵蓋不完整為 `1`、觀察完整且沒有警示為 `0`。排程時可分別保存標準輸出與退出碼。
 
 `adm smart` 只對支援的區塊裝置名稱執行 `smartctl -H -n standby`，不會啟動 SMART 自我測試，也不輸出磁碟序號或屬性；待機磁碟可能回報未知。AS-202TE 唯讀實測看到兩個支援裝置，但健康狀態都未知、涵蓋範圍不完整，因此不能據此判定磁碟健康。
 

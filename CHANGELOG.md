@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0 — 2026-11-21
+
+- Expand offline Markdown rendering to security audits, incident scans, platform status, topology, SMART, temperature, observations, comparisons, and module-operation reports; raw SSH sections and path fields are omitted or redacted.
+- Add `--compact-json` to JSON-capable commands. It implies `--json` and emits one line for scripts and scheduled jobs.
+- Document a cron-friendly health workflow that combines compact JSON with the existing opt-in health exit-code policy.
+
 ## 1.6.0 — 2026-11-21
 
 - Add allowlisted `adm services`, local NUT `adm ups`, and address-free TCP `adm connections` observations.

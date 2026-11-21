@@ -25,7 +25,7 @@ class MarkdownReportTests(unittest.TestCase):
 
         self.assertIn("# ASUSTOR NAS CLI Health summary", markdown)
         self.assertIn("summary.temperature.maximum_celsius", markdown)
-        self.assertIn("Raw SSH `sections` are omitted", markdown)
+        self.assertIn("Raw SSH `sections` and path fields", markdown)
         self.assertNotIn("eth0: UP", markdown)
 
     def test_risk_signals_are_highlighted(self):
@@ -43,6 +43,73 @@ class MarkdownReportTests(unittest.TestCase):
         ).encode()
         with self.assertRaisesRegex(ReportFormatError, "supported report types"):
             parse_report_bytes(payload)
+
+    def test_other_published_report_types_render(self):
+        reports = {
+            "security-audit": {"summary": {}, "checks": []},
+            "incident-scan": {"summary": {}, "coverage": {}, "findings": []},
+            "platform-status": {"dmi": {}, "modules": {}, "conflicts": [], "notes": []},
+            "disk-topology": {
+                "summary": {},
+                "coverage": {},
+                "disks": [],
+                "partitions": [],
+                "arrays": [],
+                "volumes": [],
+            },
+            "smart-health": {"summary": {}, "devices": [], "notes": []},
+            "temperature-observation": {"summary": {}, "sensors": [], "notes": []},
+            "service-observations": {"coverage": "complete", "processes": [], "note": "counts only"},
+            "ups-observations": {"coverage": "complete", "devices": [], "note": "names omitted"},
+            "connection-observations": {
+                "coverage": "complete",
+                "protocol": "TCP",
+                "ipv4": None,
+                "ipv6": None,
+            },
+            "report-comparison": {"changes": {}, "counts": {}},
+            "comparison": {"changes": {}, "counts": {}},
+            "platform-module-operation": {
+                "modules_before": {},
+                "modules_after": {},
+                "modules_expected": {},
+            },
+        }
+
+        for report_type, fields in reports.items():
+            with self.subTest(report_type=report_type):
+                report = {"schema_version": 1, "report_type": report_type, **fields}
+                parsed = parse_report_bytes(json.dumps(report).encode())
+                markdown = render_report_markdown(parsed)
+
+                self.assertIn(f"Report type: `{report_type}`", markdown)
+                self.assertIn("Raw SSH `sections`", markdown)
+
+    def test_incident_rendering_redacts_paths_credentials_and_addresses(self):
+        report = {
+            "schema_version": 1,
+            "report_type": "incident-scan",
+            "host": "NAS",
+            "summary": {"state": "indicators_observed", "risk_signals": []},
+            "coverage": {"files": "complete"},
+            "findings": [
+                {
+                    "id": "deadbolt.file_suffix",
+                    "path": "/volume1/Private/secret.deadbolt",
+                    "evidence": "operator password=not-for-output saw 192.0.2.12",
+                }
+            ],
+            "sections": {"raw": "must never appear"},
+        }
+
+        markdown = render_report_markdown(report)
+
+        self.assertIn("findings[0].path", markdown)
+        self.assertIn("[redacted]", markdown)
+        self.assertNotIn("/volume1/Private", markdown)
+        self.assertNotIn("not-for-output", markdown)
+        self.assertNotIn("192.0.2.12", markdown)
+        self.assertNotIn("must never appear", markdown)
 
     def test_non_object_and_non_v1_reports_are_rejected(self):
         with self.assertRaisesRegex(ReportFormatError, "must be an object"):

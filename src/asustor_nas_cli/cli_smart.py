@@ -47,13 +47,13 @@ def run_smart_health(args):
     report, error = collect_smart_health(args)
     if error:
         if args.json:
-            print_json(report)
+            print_json(report, compact=args.compact_json)
         else:
             print(f"adm: {error}", file=sys.stderr)
         return 1
 
     if args.json:
-        print_json(report)
+        print_json(report, compact=args.compact_json)
     else:
         print(format_smart_health(report))
     if report["summary"]["state"] == "failed":

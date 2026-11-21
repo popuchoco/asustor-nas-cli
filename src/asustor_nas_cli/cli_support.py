@@ -7,8 +7,11 @@ from .commands import build_remote_command, parse_sections
 from .privacy import redact_sensitive_text
 
 
-def print_json(result):
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+def print_json(result, compact=False):
+    if compact:
+        print(json.dumps(result, separators=(",", ":"), ensure_ascii=False))
+    else:
+        print(json.dumps(result, indent=2, ensure_ascii=False))
 
 def run_ssh_sections(args, section_names):
     remote_command = build_remote_command(section_names)
