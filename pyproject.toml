@@ -4,10 +4,31 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "asustor-nas-cli"
-version = "0.2.0"
-description = "Read-only diagnostics and ransomware checks for ASUSTOR ADM NAS devices"
+version = "0.3.0"
+description = "Safety-first Python CLI and read-only MCP server for ASUSTOR ADM diagnostics, ransomware checks, and guarded platform-module management"
+readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.10"
 dependencies = []
+keywords = ["asustor", "adm", "nas", "cli", "mcp", "security", "ransomware", "deadbolt"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: System :: Systems Administration",
+  "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/popuchoco/asustor-nas-cli"
+Repository = "https://github.com/popuchoco/asustor-nas-cli"
+Issues = "https://github.com/popuchoco/asustor-nas-cli/issues"
 
 [project.scripts]
 adm = "asustor_nas_cli.cli:main"

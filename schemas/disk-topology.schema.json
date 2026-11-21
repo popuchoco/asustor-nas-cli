@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/disk-topology.schema.json",
+  "title": "ASUSTOR disk topology report",
+  "type": "object",
+  "required": ["schema_version", "report_type", "host", "host_id", "sector_size_bytes", "disks", "partitions", "arrays", "volumes", "coverage", "limits", "summary"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "disk-topology"},
+    "host": {"type": ["string", "null"]},
+    "host_id": {"type": ["string", "null"]},
+    "sector_size_bytes": {"const": 512},
+    "disks": {"type": "array", "items": {"$ref": "#/$defs/disk"}},
+    "partitions": {"type": "array", "items": {"$ref": "#/$defs/partition"}},
+    "arrays": {"type": "array", "items": {"$ref": "#/$defs/array"}},
+    "volumes": {"type": "array", "items": {"$ref": "#/$defs/volume"}},
+    "coverage": {
+      "type": "object",
+      "required": ["sysfs_disks", "raid_status", "volume_mounts", "parse_errors"],
+      "properties": {
+        "sysfs_disks": {"enum": ["complete", "unknown"]},
+        "raid_status": {"enum": ["complete", "unknown"]},
+        "volume_mounts": {"enum": ["complete", "unknown"]},
+        "parse_errors": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": true
+    },
+    "limits": {
+      "type": "object",
+      "required": ["smart_health_read", "serial_numbers_included", "sysfs_size_unit"],
+      "properties": {
+        "smart_health_read": {"const": false},
+        "serial_numbers_included": {"const": false},
+        "sysfs_size_unit": {"const": "512-byte sectors"}
+      },
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": "object",
+      "required": ["disk_count", "array_count", "degraded_arrays", "state"],
+      "properties": {
+        "disk_count": {"type": "integer", "minimum": 0},
+        "array_count": {"type": "integer", "minimum": 0},
+        "degraded_arrays": {"type": "array", "items": {"type": "string"}},
+        "state": {"enum": ["observed", "degraded"]}
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "disk": {
+      "type": "object",
+      "required": ["name", "model", "sectors", "size_bytes", "partitions", "arrays"],
+      "properties": {
+        "name": {"type": "string"},
+        "model": {"type": ["string", "null"]},
+        "sectors": {"type": ["integer", "null"]},
+        "size_bytes": {"type": ["integer", "null"]},
+        "partitions": {"type": "array", "items": {"type": "string"}},
+        "arrays": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": true
+    },
+    "partition": {
+      "type": "object",
+      "required": ["name", "disk", "number", "sectors", "size_bytes", "arrays"],
+      "properties": {
+        "name": {"type": "string"},
+        "disk": {"type": "string"},
+        "number": {"type": ["integer", "null"]},
+        "sectors": {"type": ["integer", "null"]},
+        "size_bytes": {"type": ["integer", "null"]},
+        "arrays": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": true
+    },
+    "array": {
+      "type": "object",
+      "required": ["name", "members", "volumes"],
+      "properties": {
+        "name": {"type": "string"},
+        "state": {"type": ["string", "null"]},
+        "level": {"type": ["string", "null"]},
+        "members": {"type": "array", "items": {"type": "string"}},
+        "volumes": {"type": "array", "items": {"type": "string"}},
+        "degraded": {"type": ["boolean", "null"]},
+        "expected_members": {"type": "integer", "minimum": 0},
+        "active_members": {"type": "integer", "minimum": 0},
+        "member_status": {"type": "string"},
+        "operation": {"enum": ["resync", "recovery", "reshape", "check"]},
+        "progress_percent": {"type": "number", "minimum": 0, "maximum": 100}
+      },
+      "additionalProperties": true
+    },
+    "volume": {
+      "type": "object",
+      "required": ["source", "mountpoint", "filesystem"],
+      "properties": {
+        "source": {"type": "string"},
+        "mountpoint": {"type": "string"},
+        "filesystem": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -3,6 +3,10 @@ __pycache__/
 *.egg-info/
 *-before.json
 *-after.json
+*-platform-before.json
+platform-before*.json
+*.before-reset.json
+platform-backup-*.json
 build/
 dist/
 .venv/

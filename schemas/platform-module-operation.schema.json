@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/platform-module-operation.schema.json",
+  "title": "ASUSTOR platform-module operation result",
+  "type": "object",
+  "required": ["schema_version", "report_type", "host", "host_id", "action", "ok", "confirmation", "backup_file", "rollback_backup_file", "backup_scope", "modules_before", "modules_after", "modules_expected", "note"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "platform-module-operation"},
+    "host": {"type": "string"},
+    "host_id": {"type": "string"},
+    "action": {"enum": ["load", "unload", "reset"]},
+    "ok": {"type": "boolean"},
+    "confirmation": {"type": "string"},
+    "backup_file": {"type": "string"},
+    "rollback_backup_file": {"type": ["string", "null"]},
+    "backup_scope": {"type": "string"},
+    "modules_before": {"type": "object"},
+    "modules_after": {"type": "object"},
+    "modules_expected": {"type": "object"},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": true
+}

@@ -7,6 +7,7 @@ import ssl
 import subprocess
 import sys
 import time
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -29,7 +30,7 @@ def inspect_adm_portal(host, port, timeout, ca_file=None, insecure=False):
 
     url_host = f"[{host}]" if ":" in host else host
     url = f"https://{url_host}:{port}/portal/"
-    request = Request(url, headers={"User-Agent": "asustor-nas-cli/0.2.0"})
+    request = Request(url, headers={"User-Agent": "asustor-nas-cli/0.3.0"})
     start = time.monotonic()
 
     status = None
@@ -83,7 +84,7 @@ def probe_adm(host, port, timeout, ca_file=None, insecure=False):
     return result
 
 
-def run_ssh(host, user, port, remote_command, timeout):
+def run_ssh(host, user, port, remote_command, timeout, identity_file=None, batch=False):
     ssh_path = shutil.which("ssh")
     if not ssh_path:
         raise CliError("OpenSSH client was not found on PATH")
@@ -101,12 +102,12 @@ def run_ssh(host, user, port, remote_command, timeout):
         "ForwardAgent=no",
         "-o",
         "ClearAllForwardings=yes",
-        "-p",
-        str(port),
-        "--",
-        f"{user}@{host}",
-        remote_command,
     ]
+    if batch:
+        arguments.extend(["-o", "BatchMode=yes"])
+    if identity_file:
+        arguments.extend(["-i", str(Path(identity_file).expanduser())])
+    arguments.extend(["-p", str(port), "--", f"{user}@{host}", remote_command])
     interactive_terminal = sys.stdin.isatty() and sys.stderr.isatty()
     try:
         result = subprocess.run(

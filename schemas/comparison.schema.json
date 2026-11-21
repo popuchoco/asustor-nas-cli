@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/comparison.schema.json",
+  "title": "ASUSTOR report comparison",
+  "type": "object",
+  "required": ["schema_version", "report_type", "compared_type", "host", "host_id", "before_generated_at", "after_generated_at", "changes", "counts", "note"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "comparison"},
+    "compared_type": {"enum": ["security-audit", "incident-scan"]},
+    "host": {"type": "string"},
+    "host_id": {"type": ["string", "null"]},
+    "before_generated_at": {"type": ["string", "null"]},
+    "after_generated_at": {"type": ["string", "null"]},
+    "coverage_before": {"type": ["object", "null"]},
+    "coverage_after": {"type": ["object", "null"]},
+    "scope_before": {"type": ["object", "null"]},
+    "scope_after": {"type": ["object", "null"]},
+    "scope_changed": {"type": "boolean"},
+    "coverage_state_changed": {"type": "boolean"},
+    "changes": {
+      "type": "object",
+      "required": ["newly_observed", "no_longer_observed", "not_reobserved_in_incomplete_scan", "status_changed", "unchanged"],
+      "properties": {
+        "newly_observed": {"type": "array", "items": {"type": "object"}},
+        "no_longer_observed": {"type": "array", "items": {"type": "object"}},
+        "not_reobserved_in_incomplete_scan": {"type": "array", "items": {"type": "object"}},
+        "status_changed": {"type": "array", "items": {"type": "object", "required": ["before", "after"]}},
+        "unchanged": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": false
+    },
+    "counts": {
+      "type": "object",
+      "required": ["newly_observed", "no_longer_observed", "not_reobserved_in_incomplete_scan", "status_changed", "unchanged"],
+      "properties": {
+        "newly_observed": {"type": "integer", "minimum": 0},
+        "no_longer_observed": {"type": "integer", "minimum": 0},
+        "not_reobserved_in_incomplete_scan": {"type": "integer", "minimum": 0},
+        "status_changed": {"type": "integer", "minimum": 0},
+        "unchanged": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "note": {"type": "string"}
+  },
+  "additionalProperties": true
+}

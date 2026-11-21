@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/platform-module-backup.schema.json",
+  "title": "Local ASUSTOR platform-module state backup",
+  "type": "object",
+  "required": ["schema_version", "report_type", "host", "host_id", "ssh_port", "kernel_release", "dmi", "modules", "scope", "restore_limit"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "platform-module-backup"},
+    "host": {"type": "string"},
+    "host_id": {"type": "string"},
+    "ssh_port": {"type": "integer", "minimum": 1, "maximum": 65535},
+    "kernel_release": {"type": "string"},
+    "dmi": {
+      "type": "object",
+      "required": ["system_vendor", "product_name"],
+      "properties": {
+        "system_vendor": {"type": ["string", "null"]},
+        "product_name": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "modules": {
+      "type": "object",
+      "required": ["asustor", "asustor_it87", "asustor_gpio_it87"],
+      "properties": {
+        "asustor": {"type": "boolean"},
+        "asustor_it87": {"type": "boolean"},
+        "asustor_gpio_it87": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "scope": {"type": "string"},
+    "restore_limit": {"type": "string"}
+  },
+  "additionalProperties": false
+}

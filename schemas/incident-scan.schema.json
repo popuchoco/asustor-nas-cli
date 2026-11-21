@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/incident-scan.schema.json",
+  "title": "ASUSTOR DeadBolt indicator scan",
+  "type": "object",
+  "required": ["schema_version", "report_type", "rule_set", "generated_at", "host", "host_id", "adm_version", "portal_tls_verified", "scope", "coverage", "findings", "summary"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "incident-scan"},
+    "rule_set": {"type": "string"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "host": {"type": "string"},
+    "host_id": {"type": ["string", "null"]},
+    "adm_version": {"type": ["string", "null"]},
+    "portal_tls_verified": {"type": ["boolean", "null"]},
+    "scope": {
+      "type": "object",
+      "required": ["volumes", "filename_suffix", "max_seconds", "max_hits", "file_contents_scanned"],
+      "properties": {
+        "volumes": {"type": "array", "items": {"type": "string"}},
+        "filename_suffix": {"const": ".deadbolt"},
+        "max_seconds": {"type": "integer", "minimum": 1, "maximum": 3600},
+        "max_hits": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "file_contents_scanned": {"const": false}
+      },
+      "additionalProperties": true
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["files", "files_reason", "portal", "portal_reason", "permission_errors", "hit_limit_reached", "scan_exit_code", "scan_elapsed_seconds"],
+      "properties": {
+        "files": {"enum": ["complete", "partial", "unavailable"]},
+        "files_reason": {"type": "string"},
+        "portal": {"enum": ["complete", "partial", "unavailable"]},
+        "portal_reason": {"type": "string"},
+        "permission_errors": {"type": "integer", "minimum": 0},
+        "hit_limit_reached": {"type": "boolean"},
+        "scan_exit_code": {"type": ["integer", "null"]},
+        "scan_elapsed_seconds": {"type": ["integer", "null"], "minimum": 0}
+      },
+      "additionalProperties": true
+    },
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "summary": {
+      "type": "object",
+      "required": ["state", "ioc_observed", "file_ioc_count", "portal_ioc_count", "note"],
+      "properties": {
+        "state": {"enum": ["indicators_observed", "no_ioc_observed", "incomplete"]},
+        "ioc_observed": {"type": "boolean"},
+        "file_ioc_count": {"type": "integer", "minimum": 0},
+        "portal_ioc_count": {"type": "integer", "minimum": 0},
+        "note": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": ["id", "status", "indicator", "evidence", "sources"],
+      "properties": {
+        "id": {"type": "string"},
+        "status": {"const": "fail"},
+        "indicator": {"type": "string"},
+        "path": {"type": "string"},
+        "evidence": {"type": "string"},
+        "sources": {"type": "array", "items": {"type": "string", "format": "uri"}}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

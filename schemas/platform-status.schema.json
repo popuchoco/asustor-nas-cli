@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/platform-status.schema.json",
+  "title": "ASUSTOR platform-driver preflight status",
+  "type": "object",
+  "required": ["schema_version", "report_type", "host", "host_id", "ssh_port", "kernel_release", "kernel_supported", "dmi", "dmi_allowlisted", "preflight_passed", "modules", "conflicts", "coverage", "notes"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "platform-status"},
+    "host": {"type": ["string", "null"]},
+    "host_id": {"type": ["string", "null"]},
+    "ssh_port": {"type": ["integer", "null"]},
+    "kernel_release": {"type": ["string", "null"]},
+    "kernel_supported": {"type": "boolean"},
+    "dmi": {
+      "type": "object",
+      "required": ["system_vendor", "product_name"],
+      "properties": {
+        "system_vendor": {"type": ["string", "null"]},
+        "product_name": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "dmi_allowlisted": {"type": "boolean"},
+    "preflight_passed": {"type": "boolean"},
+    "modules": {
+      "type": "object",
+      "required": ["asustor", "asustor_it87", "asustor_gpio_it87", "it87"],
+      "properties": {
+        "asustor": {"type": "boolean"},
+        "asustor_it87": {"type": "boolean"},
+        "asustor_gpio_it87": {"type": "boolean"},
+        "it87": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "conflicts": {"type": "array", "items": {"type": "string"}},
+    "coverage": {"enum": ["complete", "partial"]},
+    "notes": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

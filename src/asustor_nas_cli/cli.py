@@ -7,8 +7,22 @@ import os
 import re
 import sys
 
+from . import __version__
 from .client import CliError, inspect_adm_portal, probe_adm, run_ssh
 from .commands import DOCTOR_SECTIONS, build_remote_command, parse_sections
+from .platform import (
+    action_target,
+    build_module_change_command,
+    build_module_preflight_command,
+    build_status_command as build_platform_status_command,
+    compatibility_error,
+    load_backup as load_platform_backup,
+    parse_platform_status,
+    snapshot_for_backup,
+    validate_backup_target,
+    write_backup as write_platform_backup,
+)
+from .privacy import REDACTED_HOST, host_fingerprint, redact_sensitive_text
 from .security import (
     build_incident_report,
     build_scan_command,
@@ -19,6 +33,7 @@ from .security import (
     format_incident,
     load_report,
 )
+from .topology import format_disk_topology, parse_disk_topology
 
 
 def valid_host(value):
@@ -90,6 +105,11 @@ def add_common_arguments(parser, needs_ssh=False):
             default=positive_port(os.environ.get("ASUSTOR_SSH_PORT", "22")),
             help="SSH port (default: ASUSTOR_SSH_PORT or 22)",
         )
+        parser.add_argument(
+            "--identity-file",
+            default=os.environ.get("ASUSTOR_SSH_IDENTITY_FILE"),
+            help="OpenSSH private-key path (default: ASUSTOR_SSH_IDENTITY_FILE)",
+        )
 
 
 def add_probe_arguments(parser):
@@ -110,9 +130,9 @@ def add_probe_arguments(parser):
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="adm",
-        description="Read-only diagnostics and ransomware checks for ASUSTOR ADM NAS devices.",
+        description="Safety-first diagnostics, ransomware checks and guarded platform-module controls for ASUSTOR ADM NAS devices.",
     )
-    parser.add_argument("--version", action="version", version="adm 0.2.0")
+    parser.add_argument("--version", action="version", version=f"adm {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
 
     probe = commands.add_parser("probe", help="check the ADM HTTPS portal")
@@ -132,6 +152,7 @@ def build_parser():
         ("raid", "read Linux software RAID status over SSH"),
         ("network", "read network interface status over SSH"),
         ("disks", "list disks visible to ADM smartctl over SSH"),
+        ("disk-topology", "map physical disks, Linux RAID members, and volume mounts"),
     ):
         command_parser = commands.add_parser(name, help=description)
         add_common_arguments(command_parser, needs_ssh=True)
@@ -150,7 +171,7 @@ def build_parser():
     audit.add_argument(
         "--strong-password-confirmed",
         action="store_true",
-        help="operator confirms the admin password is unique and strong",
+        help="operator confirms the administrator account password is unique and strong",
     )
     audit.add_argument(
         "--ezconnect-disabled",
@@ -186,6 +207,23 @@ def build_parser():
         help="maximum matching filenames to return (default: 100)",
     )
 
+    commands.add_parser("mcp", help="run the read-only MCP server over stdio")
+
+    platform = commands.add_parser("platform", help="inspect or guardedly manage supported ASUSTOR kernel modules")
+    platform_commands = platform.add_subparsers(dest="platform_action", required=True)
+    platform_status = platform_commands.add_parser("status", help="read kernel, hardware and driver-module status")
+    add_common_arguments(platform_status, needs_ssh=True)
+    platform_module = platform_commands.add_parser("module", help="load, unload or restore the platform-driver module state")
+    add_common_arguments(platform_module, needs_ssh=True)
+    module_actions = platform_module.add_mutually_exclusive_group(required=True)
+    module_actions.add_argument("--load", dest="module_action", action="store_const", const="load", help="load the supported driver module family")
+    module_actions.add_argument("--unload", dest="module_action", action="store_const", const="unload", help="unload the supported driver module family")
+    module_actions.add_argument("--reset", dest="module_action", action="store_const", const="reset", help="restore the module state from a prior local backup")
+    platform_module.add_argument("--backup", required=True, help="local module-state backup file (created before load/unload; read by --reset)")
+    platform_module.add_argument("--rollback-backup", help="local snapshot path to create before --reset (default: <backup>.before-reset.json)")
+    platform_module.add_argument("--confirm-risk", action="store_true", help="acknowledge the kernel-module and hardware-control risks")
+    platform_module.add_argument("--force", action="store_true", help="skip the interactive second confirmation; --confirm-risk and a valid backup are still required")
+
     return parser
 
 
@@ -210,13 +248,16 @@ def run_probe(args):
             insecure=args.insecure,
         )
     except CliError as error:
+        safe_error = redact_sensitive_text(error, args.host)
         if args.json:
-            print_json({"command": "probe", "host": args.host, "ok": False, "error": str(error)})
+            print_json({"command": "probe", "host": REDACTED_HOST, "host_id": host_fingerprint(args.host), "ok": False, "error": safe_error})
         else:
-            print(f"adm: {error}", file=sys.stderr)
+            print(f"adm: {safe_error}", file=sys.stderr)
         return 1
 
     result["command"] = "probe"
+    result["host"] = REDACTED_HOST
+    result["host_id"] = host_fingerprint(args.host)
     result["ok"] = True
     if args.json:
         print_json(result)
@@ -232,8 +273,24 @@ def run_probe(args):
 
 def run_ssh_sections(args, section_names):
     remote_command = build_remote_command(section_names)
-    output = run_ssh(args.host, args.user, args.port, remote_command, args.timeout)
-    return parse_sections(output, section_names)
+    output = run_ssh(
+        args.host,
+        args.user,
+        args.port,
+        remote_command,
+        args.timeout,
+        identity_file=getattr(args, "identity_file", None),
+    )
+    sections = parse_sections(output, section_names)
+    return {
+        name: redact_sensitive_text(
+            value,
+            args.host,
+            getattr(args, "user", None),
+            include_all_ips=True,
+        )
+        for name, value in sections.items()
+    }
 
 
 def run_read_command(args):
@@ -243,7 +300,8 @@ def run_read_command(args):
         print_json(
             {
                 "command": args.command,
-                "host": args.host,
+                "host": REDACTED_HOST,
+                "host_id": host_fingerprint(args.host),
                 "ssh_port": args.port,
                 "sections": sections,
             }
@@ -259,7 +317,8 @@ def run_health(args):
         print_json(
             {
                 "command": "health",
-                "host": args.host,
+                "host": REDACTED_HOST,
+                "host_id": host_fingerprint(args.host),
                 "ssh_port": args.port,
                 "ok": True,
                 "sections": sections,
@@ -270,6 +329,159 @@ def run_health(args):
             print(f"--- {name} ---")
             print(output or "(no output)")
     return 0
+
+
+def run_disk_topology(args):
+    sections = run_ssh_sections(args, ("disk_topology",))
+    report = parse_disk_topology(sections["disk_topology"], host=REDACTED_HOST)
+    report["host_id"] = host_fingerprint(args.host)
+    if args.json:
+        print_json(report)
+    else:
+        print(format_disk_topology(report))
+    return 1 if report["summary"]["state"] == "degraded" else 0
+
+
+def _read_platform_status(args):
+    output = run_ssh(
+        args.host,
+        args.user,
+        args.port,
+        build_platform_status_command(),
+        args.timeout,
+        identity_file=args.identity_file,
+    )
+    return parse_platform_status(output, host=args.host, ssh_port=args.port)
+
+
+def _confirm_platform_action(args):
+    if not args.confirm_risk:
+        raise CliError("module changes require --confirm-risk and a pre-operation backup")
+    if args.force:
+        return "--force supplied; interactive confirmation skipped after explicit risk acknowledgement"
+    phrase = f"{args.module_action.upper()} NAS {host_fingerprint(args.host)}"
+    print(
+        "WARNING: kernel-module changes can disable GPIO controls, affect LEDs/buttons, "
+        "cause instability, or corrupt data. Fan-control side effects are not managed."
+    )
+    print("A local module-state backup will be created before the remote change.")
+    try:
+        answer = input(f"Type {phrase} to continue: ")
+    except EOFError as error:
+        raise CliError("interactive confirmation unavailable; use --force with --confirm-risk and a valid backup") from error
+    if answer.strip() != phrase:
+        raise CliError("confirmation did not match; no kernel-module change was made")
+    return "interactive confirmation completed"
+
+
+def _format_platform_status(report):
+    modules = ", ".join(
+        f"{name}={'loaded' if state else 'not loaded'}" for name, state in report["modules"].items()
+    )
+    support = "preflight passed for guarded control" if report["preflight_passed"] else "read-only / control blocked"
+    return (
+        f"Platform driver: {support}\n"
+        f"Kernel: {report['kernel_release'] or 'unknown'} (minimum 6.1)\n"
+        f"Hardware: {report['dmi']['system_vendor'] or 'unknown'} / {report['dmi']['product_name'] or 'unknown'}\n"
+        f"Modules: {modules}\n"
+        "Fan PWM and LED values are not changed or included in the module-state backup."
+    )
+
+
+def run_platform(args):
+    try:
+        if args.platform_action == "status":
+            report = _read_platform_status(args)
+            if args.json:
+                print_json(report)
+            else:
+                print(_format_platform_status(report))
+            return 0 if report["coverage"] == "complete" else 1
+
+        if not args.confirm_risk:
+            raise CliError("module changes require --confirm-risk and a pre-operation backup")
+        backup = load_platform_backup(args.backup) if args.module_action == "reset" else None
+        current = _read_platform_status(args)
+        if args.module_action == "reset":
+            target = validate_backup_target(backup, current)
+            compatibility = compatibility_error(current, "reset", target)
+        else:
+            target = action_target(args.module_action, current)
+            compatibility = compatibility_error(current, args.module_action)
+        if compatibility:
+            raise CliError(compatibility)
+
+        dry_run = build_module_preflight_command(
+            target,
+            {name: current["modules"][name] for name in target},
+        )
+        preflight_output = run_ssh(
+            args.host,
+            args.user,
+            args.port,
+            dry_run,
+            args.timeout,
+            identity_file=args.identity_file,
+        )
+        if "__ADM_PLATFORM_PREFLIGHT_OK__" not in preflight_output:
+            raise CliError("kernel module dry-run did not complete; no module change was attempted")
+
+        confirmation = _confirm_platform_action(args)
+
+        if args.module_action != "reset":
+            local_backup = snapshot_for_backup(current)
+            backup_path = write_platform_backup(args.backup, local_backup)
+            rollback_backup_path = None
+        else:
+            backup_path = os.path.abspath(os.path.expanduser(args.backup))
+            rollback_path = args.rollback_backup or (os.path.splitext(backup_path)[0] + ".before-reset.json")
+            rollback_backup_path = write_platform_backup(rollback_path, snapshot_for_backup(current))
+
+        remote = build_module_change_command(target)
+        output = run_ssh(
+            args.host,
+            args.user,
+            args.port,
+            remote,
+            max(args.timeout, 60),
+            identity_file=args.identity_file,
+        )
+        after = parse_platform_status(output, host=args.host, ssh_port=args.port)
+        actual = {name: after["modules"][name] for name in target}
+        ok = (
+            after["coverage"] == "complete"
+            and actual == target
+            and (not target["asustor_it87"] or not after["conflicts"])
+        )
+        report = {
+            "schema_version": 1,
+            "report_type": "platform-module-operation",
+            "host": REDACTED_HOST,
+            "host_id": host_fingerprint(args.host),
+            "action": args.module_action,
+            "ok": ok,
+            "confirmation": confirmation,
+            "backup_file": "[local path redacted]",
+            "rollback_backup_file": "[local path redacted]" if rollback_backup_path else None,
+            "backup_scope": "loaded-state snapshot of the three managed modules only",
+            "modules_before": current["modules"],
+            "modules_after": after["modules"],
+            "modules_expected": target,
+            "note": "Use adm platform module --reset --backup FILE to restore the saved loaded-module state.",
+        }
+        if args.json:
+            print_json(report)
+        else:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if ok else 1
+    except (CliError, ValueError, OSError) as error:
+        safe_error = redact_sensitive_text(error, args.host, getattr(args, "user", None))
+        if args.json:
+            command = "platform status" if args.platform_action == "status" else "platform module"
+            print_json({"command": command, "host": REDACTED_HOST, "host_id": host_fingerprint(args.host), "ok": False, "error": safe_error})
+        else:
+            print(f"adm: {safe_error}", file=sys.stderr)
+        return 1
 
 
 def run_security_audit(args):
@@ -285,9 +497,9 @@ def run_security_audit(args):
             insecure=args.insecure,
         )
     except CliError as error:
-        portal_error = str(error)
+        portal_error = redact_sensitive_text(error, args.host, args.user)
     report = build_security_audit(
-        args.host,
+        REDACTED_HOST,
         args.port,
         sections["security"],
         portal,
@@ -296,6 +508,7 @@ def run_security_audit(args):
         strong_password_confirmed=args.strong_password_confirmed,
         ezconnect_disabled=args.ezconnect_disabled,
         remote_access_reviewed=args.remote_access_reviewed,
+        host_id=host_fingerprint(args.host),
     )
     if args.json:
         print_json(report)
@@ -318,9 +531,12 @@ def run_incident_scan(args):
             args.port,
             build_scan_command(args.max_seconds, args.max_hits),
             max(args.timeout, args.max_seconds + 15),
+            identity_file=args.identity_file,
         )
     except CliError as error:
-        scan_error = str(error)
+        scan_error = redact_sensitive_text(error, args.host, args.user)
+    if scan_output is not None:
+        scan_output = redact_sensitive_text(scan_output, args.host, args.user, include_all_ips=True)
 
     portal = None
     portal_error = None
@@ -333,10 +549,10 @@ def run_incident_scan(args):
             insecure=args.insecure,
         )
     except CliError as error:
-        portal_error = str(error)
+        portal_error = redact_sensitive_text(error, args.host, args.user)
 
     report = build_incident_report(
-        args.host,
+        REDACTED_HOST,
         args.port,
         scan_output=scan_output,
         scan_error=scan_error,
@@ -344,6 +560,7 @@ def run_incident_scan(args):
         portal_error=portal_error,
         max_seconds=args.max_seconds,
         max_hits=args.max_hits,
+        host_id=host_fingerprint(args.host),
     )
     if args.json:
         print_json(report)
@@ -384,20 +601,24 @@ def run_doctor(args):
             insecure=args.insecure,
         )
     except CliError as error:
-        probe_error = str(error)
+        probe_error = redact_sensitive_text(error, args.host, args.user)
 
     ssh_result = None
     ssh_error = None
     try:
         ssh_result = run_ssh_sections(args, DOCTOR_SECTIONS)
     except CliError as error:
-        ssh_error = str(error)
+        ssh_error = redact_sensitive_text(error, args.host, args.user)
 
     ok = probe_error is None and ssh_error is None
+    if probe_result is not None:
+        probe_result["host"] = REDACTED_HOST
+        probe_result["host_id"] = host_fingerprint(args.host)
     if args.json:
         result = {
             "command": "doctor",
-            "host": args.host,
+            "host": REDACTED_HOST,
+            "host_id": host_fingerprint(args.host),
             "ok": ok,
             "https": (
                 {"ok": True, **probe_result}
@@ -433,6 +654,10 @@ def main():
     args = parser.parse_args()
     if args.command == "security" and args.security_action == "compare":
         return run_security_compare(args)
+    if args.command == "mcp":
+        from .mcp import serve
+
+        return serve()
     if not args.host:
         parser.error("provide a NAS address with --host or ASUSTOR_HOST")
     if args.timeout < 1:
@@ -448,17 +673,22 @@ def main():
 
     if hasattr(args, "user"):
         validate_user(parser, args.user)
+    if args.command == "platform":
+        return run_platform(args)
     try:
         if args.command == "doctor":
             return run_doctor(args)
         if args.command == "health":
             return run_health(args)
+        if args.command == "disk-topology":
+            return run_disk_topology(args)
         if args.command == "security" and args.security_action == "audit":
             return run_security_audit(args)
         if args.command == "incident" and args.incident_action == "scan":
             return run_incident_scan(args)
         return run_read_command(args)
     except CliError as error:
+        safe_error = redact_sensitive_text(error, args.host, getattr(args, "user", None))
         if args.json:
             print_json(
                 {
@@ -467,13 +697,14 @@ def main():
                     else f"{args.command} {getattr(args, 'incident_action', '')}".strip()
                     if args.command == "incident"
                     else args.command,
-                    "host": args.host,
+                    "host": REDACTED_HOST,
+                    "host_id": host_fingerprint(args.host),
                     "ok": False,
-                    "error": str(error),
+                    "error": safe_error,
                 }
             )
         else:
-            print(f"adm: {error}", file=sys.stderr)
+            print(f"adm: {safe_error}", file=sys.stderr)
         return 1
 
 

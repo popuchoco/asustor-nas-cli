@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/security-audit.schema.json",
+  "title": "ASUSTOR DeadBolt prevention audit",
+  "type": "object",
+  "required": ["schema_version", "report_type", "rule_set", "generated_at", "host", "host_id", "adm_version", "portal_tls_verified", "scope_statement", "checks", "summary"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "security-audit"},
+    "rule_set": {"type": "string"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "host": {"type": "string"},
+    "host_id": {"type": ["string", "null"]},
+    "adm_version": {"type": ["string", "null"]},
+    "portal_tls_verified": {"type": ["boolean", "null"]},
+    "scope_statement": {"type": "string"},
+    "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}},
+    "summary": {
+      "type": "object",
+      "required": ["state", "counts"],
+      "properties": {
+        "state": {"enum": ["action_required", "review_recommended", "manual_checks_remaining", "no_alerts_in_checked_controls"]},
+        "counts": {
+          "type": "object",
+          "required": ["fail", "warn", "unknown", "pass"],
+          "properties": {
+            "fail": {"type": "integer", "minimum": 0},
+            "warn": {"type": "integer", "minimum": 0},
+            "unknown": {"type": "integer", "minimum": 0},
+            "pass": {"type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "check": {
+      "type": "object",
+      "required": ["id", "status", "title", "evidence", "recommendation", "sources"],
+      "properties": {
+        "id": {"type": "string"},
+        "status": {"enum": ["fail", "warn", "unknown", "pass"]},
+        "title": {"type": "string"},
+        "evidence": {"type": "string"},
+        "recommendation": {"type": "string"},
+        "sources": {"type": "array", "items": {"type": "string", "format": "uri"}},
+        "evidence_source": {"enum": ["operator_assertion", "not_observed"]}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
