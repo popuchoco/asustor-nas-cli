@@ -133,7 +133,16 @@
           },
           "additionalProperties": false
         },
-        "temperature_warning_celsius": {"type": "number", "minimum": 1, "maximum": 150}
+        "temperature_warning_celsius": {"type": "number", "minimum": 1, "maximum": 150},
+        "additional_sections": {
+          "type": "object",
+          "required": ["network", "disks"],
+          "properties": {
+            "network": {"enum": ["complete", "unavailable"]},
+            "disks": {"enum": ["complete", "unavailable"]}
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },
@@ -147,7 +156,7 @@
     {"if": {"properties": {"command": {"const": "status"}}, "required": ["command"]}, "then": {"properties": {"summary": {"required": ["system"]}}}},
     {"if": {"properties": {"command": {"const": "storage"}}, "required": ["command"]}, "then": {"properties": {"summary": {"required": ["storage"]}}}},
     {"if": {"properties": {"command": {"const": "raid"}}, "required": ["command"]}, "then": {"properties": {"summary": {"required": ["raid"]}}}},
-    {"if": {"properties": {"command": {"const": "health"}}, "required": ["command"]}, "then": {"properties": {"summary": {"required": ["system", "storage", "raid", "smart", "temperature", "temperature_warning_celsius", "additional_sections"], "properties": {"additional_sections": {"type": "object", "required": ["network", "disks"], "properties": {"network": {"enum": ["complete", "unavailable"]}, "disks": {"enum": ["complete", "unavailable"]}}, "additionalProperties": false}}}}}}
+    {"if": {"properties": {"command": {"const": "health"}}, "required": ["command"]}, "then": {"properties": {"summary": {"required": ["system", "storage", "raid", "smart", "temperature", "temperature_warning_celsius", "additional_sections"]}}}}
   ],
   "additionalProperties": false
 }
