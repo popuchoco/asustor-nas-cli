@@ -24,11 +24,28 @@ def build_scan_command(max_seconds, max_hits):
         "done\n"
         "start=$(date +%s 2>/dev/null)\n"
         "printf '__ADM_SCAN_START__=%s\\n' \"$start\"\n"
-        "if [ -x /usr/bin/timeout ]; then\n"
-        f"  /usr/bin/timeout -t {int(max_seconds)} find /volume[0-9]* -xdev -type f -iname '*.deadbolt' -print 2>&1 | awk {_shell_quote(awk_program)}\n"
-        "  rc=$?\n"
-        "else\n"
+        "find_bin=$(command -v find 2>/dev/null || true)\n"
+        "timeout_bin=$(command -v timeout 2>/dev/null || true)\n"
+        "awk_bin=$(command -v awk 2>/dev/null || true)\n"
+        "first_volume=\n"
+        "for root in /volume[0-9]*; do [ -d \"$root\" ] && { first_volume=$root; break; }; done\n"
+        "capability_error=\n"
+        "[ -n \"$find_bin\" ] || capability_error=find_unavailable\n"
+        "[ -n \"$timeout_bin\" ] || capability_error=timeout_unavailable\n"
+        "[ -n \"$awk_bin\" ] || capability_error=awk_unavailable\n"
+        "if [ -n \"$first_volume\" ] && [ -n \"$find_bin\" ] && ! \"$find_bin\" \"$first_volume\" -xdev -prune -print >/dev/null 2>&1; then\n"
+        "  capability_error=find_xdev_unsupported\n"
+        "fi\n"
+        "if [ -n \"$capability_error\" ]; then\n"
+        "  printf '__ADM_SCAN_UNAVAILABLE__=%s\\n' \"$capability_error\"\n"
         "  rc=125\n"
+        "else\n"
+        "  timeout_help=$(\"$timeout_bin\" --help 2>&1)\n"
+        "  case \"$timeout_help\" in\n"
+        f"    *BusyBox*) \"$timeout_bin\" -t {int(max_seconds)} \"$find_bin\" /volume[0-9]* -xdev -type f -iname '*.deadbolt' -print 2>&1 | \"$awk_bin\" {_shell_quote(awk_program)} ;;\n"
+        f"    *) \"$timeout_bin\" {int(max_seconds)}s \"$find_bin\" /volume[0-9]* -xdev -type f -iname '*.deadbolt' -print 2>&1 | \"$awk_bin\" {_shell_quote(awk_program)} ;;\n"
+        "  esac\n"
+        "  rc=$?\n"
         "fi\n"
         "end=$(date +%s 2>/dev/null)\n"
         "case \"$start:$end\" in *[!0-9:]*|:*) elapsed= ;; *) elapsed=$((end - start)) ;; esac\n"
@@ -46,11 +63,14 @@ def parse_scan_output(output):
     truncated = False
     exit_code = None
     elapsed_seconds = None
+    capability_error = None
     for line in output.splitlines():
         if line.startswith("__ADM_VOLUME__="):
             roots.append(line.split("=", 1)[1])
         elif line == "__ADM_SCAN_TRUNCATED__":
             truncated = True
+        elif line.startswith("__ADM_SCAN_UNAVAILABLE__="):
+            capability_error = line.split("=", 1)[1]
         elif line == "__ADM_FIND_ERROR__":
             permission_errors += 1
         elif line.startswith("__ADM_SCAN_EXIT__="):
@@ -77,6 +97,7 @@ def parse_scan_output(output):
         "truncated": truncated,
         "exit_code": exit_code,
         "elapsed_seconds": elapsed_seconds,
+        "capability_error": capability_error,
     }
 
 
@@ -95,9 +116,18 @@ def build_incident_report(
     if scan_error:
         file_coverage = "unavailable"
         file_reason = scan_error
-    elif parsed["exit_code"] == 125:
+    elif parsed["capability_error"] or parsed["exit_code"] == 125:
         file_coverage = "unavailable"
-        file_reason = "NAS 沒有 /usr/bin/timeout；為避免無界掃描，未啟動檔案搜尋。"
+        reasons = {
+            "find_unavailable": "NAS 找不到 find；未啟動檔案搜尋。",
+            "timeout_unavailable": "NAS 找不到 timeout；為避免無界掃描，未啟動檔案搜尋。",
+            "awk_unavailable": "NAS 找不到 awk；未啟動檔案搜尋。",
+            "find_xdev_unsupported": "NAS 的 find 不支援 -xdev；為避免跨越資料卷範圍，未啟動檔案搜尋。",
+        }
+        file_reason = reasons.get(
+            parsed["capability_error"],
+            "NAS 不具備安全掃描所需工具；未啟動檔案搜尋。",
+        )
     elif parsed["exit_code"] is None:
         file_coverage = "partial"
         file_reason = "掃描輸出缺少結束狀態標記，無法確認搜尋是否完成。"

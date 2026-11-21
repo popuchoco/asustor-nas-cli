@@ -2,6 +2,7 @@ import unittest
 
 from asustor_nas_cli.security import (
     build_incident_report,
+    build_scan_command,
     build_security_audit,
     compare_reports,
 )
@@ -18,6 +19,43 @@ PORTAL_VERIFIED = {
 
 
 class SecurityReportTests(unittest.TestCase):
+    def test_scan_command_discovers_tools_and_checks_bounded_scan_support(self):
+        command = build_scan_command(12, 4)
+        self.assertIn("command -v find", command)
+        self.assertIn("command -v timeout", command)
+        self.assertIn("find_xdev_unsupported", command)
+        self.assertIn("-t 12", command)
+        self.assertIn("12s", command)
+        self.assertNotIn("/usr/bin/timeout", command)
+
+    def test_missing_scan_capability_reports_unavailable_not_clean(self):
+        report = build_incident_report(
+            HOST,
+            22,
+            scan_output=(
+                "__ADM_VOLUME__=/volume1\n"
+                "__ADM_SCAN_UNAVAILABLE__=find_xdev_unsupported\n"
+                "__ADM_SCAN_EXIT__=125\n"
+            ),
+            portal=PORTAL_VERIFIED,
+        )
+        self.assertEqual(report["coverage"]["files"], "unavailable")
+        self.assertEqual(report["summary"]["state"], "incomplete")
+        self.assertIn("不支援 -xdev", report["coverage"]["files_reason"])
+
+    def test_malformed_scan_markers_keep_coverage_partial(self):
+        report = build_incident_report(
+            HOST,
+            22,
+            scan_output=(
+                "__ADM_VOLUME__=/volume1\n"
+                "__ADM_SCAN_ELAPSED__=not-a-number\n"
+            ),
+            portal=PORTAL_VERIFIED,
+        )
+        self.assertEqual(report["coverage"]["files"], "partial")
+        self.assertEqual(report["summary"]["state"], "incomplete")
+
     def test_rwm1_is_recognized_from_vendor_release_notes(self):
         report = build_security_audit(
             HOST,

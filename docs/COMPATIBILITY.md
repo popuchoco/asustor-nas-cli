@@ -11,6 +11,8 @@
 
 The AS-202TE HTTPS certificate used during the live check was not trusted. Checks performed with `--insecure` explicitly report that TLS was not verified.
 
+The normalized, reviewed facts from that device are kept in [`tests/fixtures/as202te_live_profile.json`](../tests/fixtures/as202te_live_profile.json). It is a profile summary rather than a raw command transcript; it contains no host address, account, password, MAC address, or disk serial. No Linux 6.1+ ASUSTOR device was available for this review, so the DMI allowlist has not been live-validated by this CLI and no module mutation has been attempted.
+
 ## `asustor-platform-driver` preflight
 
 The referenced driver documents support for kernels 6.1 and newer and identifies hardware through DMI plus driver-side hardware probing. The CLI applies a conservative DMI prefilter for these pairs:

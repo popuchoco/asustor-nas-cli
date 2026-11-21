@@ -11,6 +11,8 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from . import __version__
+
 
 class CliError(RuntimeError):
     """An expected connection, configuration, or remote-command error."""
@@ -30,7 +32,7 @@ def inspect_adm_portal(host, port, timeout, ca_file=None, insecure=False):
 
     url_host = f"[{host}]" if ":" in host else host
     url = f"https://{url_host}:{port}/portal/"
-    request = Request(url, headers={"User-Agent": "asustor-nas-cli/0.3.0"})
+    request = Request(url, headers={"User-Agent": f"asustor-nas-cli/{__version__}"})
     start = time.monotonic()
 
     status = None
@@ -93,7 +95,7 @@ def run_ssh(host, user, port, remote_command, timeout, identity_file=None, batch
         ssh_path,
         "-T",
         "-o",
-        "ConnectTimeout=8",
+        f"ConnectTimeout={max(1, int(timeout))}",
         "-o",
         "ServerAliveInterval=5",
         "-o",

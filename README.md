@@ -1,5 +1,7 @@
 # ASUSTOR NAS CLI
 
+[![CI](https://github.com/popuchoco/asustor-nas-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/popuchoco/asustor-nas-cli/actions/workflows/ci.yml)
+
 Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt ransomware checks, and guarded platform-driver module management. The command is named `adm`, after ASUSTOR's operating system.
 
 [繁體中文](README.zh-TW.md) · [Command specification](docs/CLI_SPEC.md) · [Compatibility](docs/COMPATIBILITY.md) · [Security](SECURITY.md) · [Reference review](docs/REFERENCE_REVIEW.md)
@@ -69,7 +71,7 @@ All NAS observation commands support `--json`. JSON reports use `schema_version:
 
 `adm security audit` checks the ADM version against the referenced ASUSTOR DeadBolt advisory, inspects the local TCP listener list, and looks for limited DeadBolt-related strings in the ADM portal. Backup readiness, password strength, EZ-Connect, and router exposure remain unknown until an operator confirms them; confirmation flags record operator assertions, not automatic verification.
 
-`adm incident scan` searches filenames ending in `.deadbolt` on `/volumeN` mounts and checks limited portal text. It does not inspect file contents, quarantine or delete files, or stop services. The search has configurable limits (`--max-seconds` and `--max-hits`). An incomplete scan stays incomplete, and a missing indicator is not proof that the NAS is uninfected.
+`adm incident scan` searches filenames ending in `.deadbolt` on `/volumeN` mounts and checks limited portal text. It does not inspect file contents, quarantine or delete files, or stop services. The search has configurable limits (`--max-seconds` and `--max-hits`). It discovers `find`, `timeout`, and `awk` through `PATH` and checks `find -xdev` support before starting; if a required bounded-scan capability is missing, the report marks file coverage unavailable. An incomplete scan stays incomplete, and a missing indicator is not proof that the NAS is uninfected.
 
 ```powershell
 adm security audit --host nas.example --user nas-user --insecure --json > audit-before.json
@@ -133,6 +135,8 @@ The server requires SSH key/agent authentication, uses fixed SSH commands, and e
 ## Compatibility and test device
 
 The CLI's live-tested baseline is ASUSTOR AS-202TE, ADM 3.5.9.RWM1, Linux 3.4.26 (i686), BusyBox 1.19.3. Read-only diagnostics, security checks, and topology parsing were checked against this unit. Kernel module changes are blocked because this model/kernel is outside the platform driver's published support range.
+
+The reviewed, redacted profile summary is available at [`tests/fixtures/as202te_live_profile.json`](tests/fixtures/as202te_live_profile.json). No Linux 6.1+ ASUSTOR unit was available, so the DMI allowlist has not been live-validated by this CLI.
 
 ADM 5.x and other ASUSTOR models are not claimed as tested by this project. See [compatibility notes](docs/COMPATIBILITY.md) for the distinction between this CLI's verified coverage and capabilities described by the reference projects.
 

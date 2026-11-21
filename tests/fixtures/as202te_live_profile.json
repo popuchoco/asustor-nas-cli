@@ -1,0 +1,17 @@
+{
+  "fixture_type": "reviewed_live_profile_summary",
+  "device_model": "AS-202TE",
+  "adm_release": "3.5.9.RWM1",
+  "kernel_release": "3.4.26",
+  "architecture": "i686",
+  "busybox_release": "1.19.3",
+  "verified_scope": [
+    "read-only system and storage diagnostics",
+    "DeadBolt prevention audit",
+    "DeadBolt filename scan",
+    "disk topology observation"
+  ],
+  "platform_module_mutation_attempted": false,
+  "platform_module_block_reason": "The kernel is below the Linux 6.1 minimum.",
+  "redaction": "No host address, account name, password, MAC address, or disk serial is retained."
+}

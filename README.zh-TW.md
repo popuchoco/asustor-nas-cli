@@ -1,5 +1,7 @@
 # ASUSTOR NAS CLI
 
+[![CI](https://github.com/popuchoco/asustor-nas-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/popuchoco/asustor-nas-cli/actions/workflows/ci.yml)
+
 以 Python 撰寫的 ASUSTOR ADM NAS 安全優先命令列工具，提供唯讀診斷、磁碟拓樸、DeadBolt 勒索病毒防護檢查，以及有相容性閘門的核心模組管理。指令名稱為 `adm`，取自 ASUSTOR 作業系統名稱。
 
 [English](README.md) · [指令規格](docs/CLI_SPEC.md) · [相容性](docs/COMPATIBILITY.md) · [安全政策](SECURITY.md) · [參考專案比對](docs/REFERENCE_REVIEW.md)
@@ -69,7 +71,7 @@ NAS 資料查詢指令支援 `--json`。JSON 報告使用 `schema_version: 1`，
 
 `adm security audit` 依 ASUSTOR DeadBolt 公告檢查 ADM 版本、檢視本機 TCP 監聽連接埠，以及搜尋 ADM 管理頁的有限字串線索。備份狀態、密碼強度、EZ-Connect 和路由器外部暴露情況無法自動驗證，會保持未知；人工確認旗標只代表操作者聲明。
 
-`adm incident scan` 只搜尋 `/volumeN` 下檔名以 `.deadbolt` 結尾的檔案及管理頁文字，不會讀取檔案內容、不會隔離或刪除檔案，也不會停止服務。可用 `--max-seconds` 和 `--max-hits` 設定掃描上限。掃描不完整時會明確標示；未發現線索不代表 NAS 沒有感染。
+`adm incident scan` 只搜尋 `/volumeN` 下檔名以 `.deadbolt` 結尾的檔案及管理頁文字，不會讀取檔案內容、不會隔離或刪除檔案，也不會停止服務。可用 `--max-seconds` 和 `--max-hits` 設定掃描上限。程式會從 `PATH` 尋找 `find`、`timeout` 和 `awk`，並先確認 `find -xdev` 可用；缺少安全限時掃描所需功能時，報告會將檔案掃描標示為不可用。掃描不完整時會明確標示；未發現線索不代表 NAS 沒有感染。
 
 ```powershell
 adm security audit --host nas.example --user nas-user --insecure --json > audit-before.json
@@ -133,6 +135,8 @@ adm platform module --reset --host NAS-IP --user nas-user \
 ## 相容性與實機驗證
 
 本專案已在 ASUSTOR AS-202TE、ADM 3.5.9.RWM1、Linux 3.4.26（i686）、BusyBox 1.19.3 上測試唯讀診斷、安全檢查與磁碟拓樸。由於此機型／核心版本不在 platform driver 公開支援範圍，核心模組變更會被拒絕。
+
+已檢視的去識別化機型摘要位於 [`tests/fixtures/as202te_live_profile.json`](tests/fixtures/as202te_live_profile.json)。目前沒有 Linux 6.1 以上的 ASUSTOR 機型可供實機驗證，因此本 CLI 尚未以 live 測試確認 DMI 白名單。
 
 本專案尚未宣稱測試 ADM 5.x 或其他 ASUSTOR 機種。請見[相容性說明](docs/COMPATIBILITY.md)，了解 CLI 實測範圍和參考專案能力的差異。
 

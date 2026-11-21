@@ -1,5 +1,7 @@
 """Fixed, read-only commands verified against ADM 3.5 on an AS-202TE."""
 
+import re
+
 READ_ONLY_COMMANDS = {
     "system": """printf 'hostname: '; hostname
 printf 'kernel: '; uname -srm
@@ -71,20 +73,22 @@ def build_remote_command(section_names):
 
 
 def parse_sections(output, section_names):
-    sections = {}
-    for index, section_name in enumerate(section_names):
-        marker = f"__ADM_SECTION_{section_name}__"
-        following_marker = (
-            f"__ADM_SECTION_{section_names[index + 1]}__"
-            if index + 1 < len(section_names)
-            else None
-        )
-        start = output.find(marker)
-        if start < 0:
-            sections[section_name] = ""
+    sections = {name: "" for name in section_names}
+    marker_pattern = re.compile(r"__ADM_SECTION_([A-Za-z0-9_]+)__")
+    markers = list(marker_pattern.finditer(output))
+    requested_order = {name: index for index, name in enumerate(section_names)}
+    encountered = [
+        requested_order[match.group(1)]
+        for match in markers
+        if match.group(1) in requested_order
+    ]
+    if encountered != sorted(encountered) or len(encountered) != len(set(encountered)):
+        return sections
+
+    for index, marker in enumerate(markers):
+        name = marker.group(1)
+        if name not in sections:
             continue
-        start += len(marker)
-        end = output.find(following_marker, start) if following_marker else -1
-        value = output[start:end if end >= 0 else None].strip()
-        sections[section_name] = value
+        end = markers[index + 1].start() if index + 1 < len(markers) else len(output)
+        sections[name] = output[marker.end():end].strip()
     return sections

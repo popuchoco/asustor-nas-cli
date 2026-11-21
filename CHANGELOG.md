@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 — 2026-11-21
+
+- Add GitHub Actions CI for Python 3.10–3.13 and Ruff linting.
+- Derive package metadata and HTTPS User-Agent from one version value; apply `--timeout` to SSH connection setup.
+- Split argument parsing, shared helpers, platform controls, and security handlers out of `cli.py`.
+- Add malformed/partial marker, SSH timeout, scan-tool capability, backup-conflict, and reviewed AS-202TE profile coverage.
+- Discover scan tools through `PATH` and fail closed with a specific coverage reason if bounded volume scanning is unsupported.
+
 ## 0.3.0 — 2026-11-21
 
 - Split DeadBolt audit, scan, comparison, and rendering into a dedicated `security` package.

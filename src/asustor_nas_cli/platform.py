@@ -44,8 +44,9 @@ def build_status_command():
 
 
 def parse_platform_status(output, host=None, ssh_port=None, host_id=None):
+    lines = output.splitlines()
     fields = {}
-    for line in output.splitlines():
+    for line in lines:
         if line.startswith("__ADM_PLATFORM_") and "=" in line:
             key, value = line.split("=", 1)
             fields[key] = value.strip()
@@ -66,7 +67,17 @@ def parse_platform_status(output, host=None, ssh_port=None, host_id=None):
         "__ADM_PLATFORM_DMI_product_name__",
         *(f"__ADM_PLATFORM_MODULE_{name}__" for name in (*DRIVER_MODULES, *CONFLICT_MODULES)),
     }
-    markers_ok = required_markers.issubset(fields)
+    marker_pairs = (
+        ("__ADM_PLATFORM_BEGIN__", "__ADM_PLATFORM_END__"),
+        ("__ADM_PLATFORM_RESULT_BEGIN__", "__ADM_PLATFORM_RESULT_END__"),
+    )
+    complete_marker_pair = any(
+        lines.count(begin) == 1
+        and lines.count(end) == 1
+        and lines.index(begin) < lines.index(end)
+        for begin, end in marker_pairs
+    )
+    markers_ok = required_markers.issubset(fields) and complete_marker_pair
     conflicts = [name for name in CONFLICT_MODULES if modules[name]]
     preflight_passed = markers_ok and kernel_supported and dmi_allowlisted and not conflicts
     return {

@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,6 +17,9 @@ from asustor_nas_cli.platform import (
     write_backup,
 )
 from asustor_nas_cli.cli import build_parser
+
+
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "as202te_live_profile.json"
 
 
 def status_output(kernel="6.8.0", vendor="Intel Corporation", product="Jasper Lake Client Platform", loaded=()):
@@ -40,14 +44,31 @@ class PlatformModuleTests(unittest.TestCase):
         self.assertIsNone(compatibility_error(report, "load"))
 
     def test_as202te_kernel_is_refused(self):
+        fixture = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
         report = parse_platform_status(
-            status_output("3.4.26", "ASUSTOR Inc.", "AS-202TE"),
+            status_output(fixture["kernel_release"], "ASUSTOR Inc.", fixture["device_model"]),
             "192.0.2.10",
             22,
         )
         self.assertFalse(report["kernel_supported"])
         self.assertFalse(report["dmi_allowlisted"])
         self.assertIn("6.1", compatibility_error(report, "load"))
+        self.assertFalse(fixture["platform_module_mutation_attempted"])
+
+    def test_missing_or_malformed_platform_markers_are_partial(self):
+        complete = status_output()
+        for malformed in (
+            complete.replace("__ADM_PLATFORM_END__", ""),
+            complete.replace("__ADM_PLATFORM_BEGIN__", "__ADM_PLATFORM_END__"),
+        ):
+            report = parse_platform_status(malformed, "nas.example", 22)
+            self.assertEqual(report["coverage"], "partial")
+
+    def test_module_operation_result_markers_are_accepted(self):
+        output = status_output().replace(
+            "__ADM_PLATFORM_BEGIN__", "__ADM_PLATFORM_RESULT_BEGIN__"
+        ).replace("__ADM_PLATFORM_END__", "__ADM_PLATFORM_RESULT_END__")
+        self.assertEqual(parse_platform_status(output)["coverage"], "complete")
 
     def test_conflicting_it87_only_blocks_load_that_needs_it87(self):
         report = parse_platform_status(status_output(loaded=("it87",)))
@@ -70,8 +91,10 @@ class PlatformModuleTests(unittest.TestCase):
             path = Path(directory) / "before.json"
             self.assertEqual(write_backup(path, backup), path.resolve())
             self.assertEqual(load_backup(path), backup)
+            original = path.read_bytes()
             with self.assertRaises(FileExistsError):
                 write_backup(path, backup)
+            self.assertEqual(path.read_bytes(), original)
         target = validate_backup_target(backup, report)
         self.assertEqual(target, {module: False for module in DRIVER_MODULES})
         other_host = parse_platform_status(status_output(), "other.example", 22)
