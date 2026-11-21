@@ -22,7 +22,10 @@ from asustor_nas_cli.topology import parse_disk_topology
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = ROOT / "schemas"
-SCHEMAS = {path.stem: json.loads(path.read_text(encoding="utf-8")) for path in SCHEMA_DIR.glob("*.json")}
+SCHEMAS = {
+    path.name.removesuffix(".schema.json"): json.loads(path.read_text(encoding="utf-8"))
+    for path in SCHEMA_DIR.glob("*.schema.json")
+}
 PORTAL = {
     "http_status": 200,
     "asustor_marker": True,
