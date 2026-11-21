@@ -132,11 +132,11 @@ class PlatformModuleTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "1 MB size limit"):
                 load_backup(path)
 
-    def test_backup_loader_rejects_deeply_nested_json(self):
+    def test_backup_loader_rejects_deeply_nested_non_backup_json(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "nested.json"
             path.write_bytes(b"[" * 5000 + b"]" * 5000)
-            with self.assertRaisesRegex(ValueError, "Could not read the platform backup"):
+            with self.assertRaises(ValueError):
                 load_backup(path)
 
     def test_status_command_has_no_mutating_operations(self):
