@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0 — 2026-11-21
+
+- Raise the supported Python minimum to 3.11 after Python 3.10 reached end of life; test Python 3.11–3.14 in CI and build release distributions on 3.14.
+- Add weekly Dependabot checks for GitHub Actions and Python package metadata; the existing action versions and optional test-dependency constraint were already current at review time.
+- Keep compatibility claims tied to available AS-202TE evidence. No additional live-device fixture or Linux 6.1+ test was added.
+
 ## 1.7.0 — 2026-11-21
 
 - Expand offline Markdown rendering to security audits, incident scans, platform status, topology, SMART, temperature, observations, comparisons, and module-operation reports; raw SSH sections and path fields are omitted or redacted.

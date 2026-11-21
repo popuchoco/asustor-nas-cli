@@ -12,6 +12,7 @@
 - [ ] Confirm that read-only MCP tools remain annotated read-only and that mutating module operations stay outside MCP.
 - [ ] Verify compatibility claims against this CLI's own evidence. Do not turn reference-project reports or code review into live-device claims.
 - [ ] Require all GitHub Actions checks on the commit to pass before tagging.
+- [ ] Review pending Dependabot pull requests and confirm the supported Python floor and workflow action versions against upstream maintenance status.
 
 ## Tag and publish
 

@@ -2,7 +2,7 @@
 
 ## Local build
 
-Use Python 3.10 or newer from a clean checkout:
+Use Python 3.11 or newer from a clean checkout:
 
 ```console
 python -m pip install --upgrade build twine
@@ -28,7 +28,7 @@ The workflow uses PyPI's OIDC Trusted Publishing permission and does not require
 
 ## Installing after publication
 
-The package requires Python 3.10+ and has no runtime dependencies. Install into an isolated command environment with pipx:
+The package requires Python 3.11+ and has no runtime dependencies. Install into an isolated command environment with pipx:
 
 ```console
 python -m pip install --user pipx

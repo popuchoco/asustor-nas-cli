@@ -3,7 +3,7 @@
 ## Global behavior
 
 - Executable: `adm`; Python package: `asustor-nas-cli`; MCP server: `adm mcp`.
-- Python 3.10+, standard-library runtime, OpenSSH client required for NAS connections.
+- Python 3.11+, standard-library runtime, OpenSSH client required for NAS connections.
 - `--host` accepts an IP address or DNS hostname. `ASUSTOR_HOST` and `ASUSTOR_USER` provide defaults.
 - SSH defaults to port 22; HTTPS defaults to 8001. `ASUSTOR_SSH_PORT`, `ASUSTOR_HTTPS_PORT`, `--port`, and `--https-port` can override them.
 - SSH key path comes from `ASUSTOR_SSH_IDENTITY_FILE` or `--identity-file`.

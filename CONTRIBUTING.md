@@ -2,7 +2,7 @@
 
 ## Development setup
 
-Use Python 3.10 or newer and the system OpenSSH client for NAS integration checks. The runtime package has no third-party Python dependencies.
+Use Python 3.11 or newer and the system OpenSSH client for NAS integration checks. The runtime package has no third-party Python dependencies.
 
 ```console
 python -m pip install -e '.[test]'
@@ -10,7 +10,7 @@ python -m unittest discover -s tests -v
 adm --help
 ```
 
-Pull requests and pushes to `main` run unit and Draft 2020-12 JSON Schema validation on Python 3.10–3.13, Ruff, and package-install checks on Windows and macOS using Python 3.10 and 3.13. Install the `test` extra to run schema tests locally. Run `ruff check .` locally before submitting when Ruff is installed.
+Pull requests and pushes to `main` run unit and Draft 2020-12 JSON Schema validation on Python 3.11–3.14, Ruff, and package-install checks on Windows and macOS using Python 3.11 and 3.14. Install the `test` extra to run schema tests locally. Run `ruff check .` locally before submitting when Ruff is installed.
 
 Do not run mutating platform-module commands on a production NAS as part of ordinary tests. Unit tests should cover their command generation, compatibility gates, backup validation and cancellation behavior with fixtures/mocks. Live module operations require hardware the reference driver explicitly supports, a recovery path, and a local state backup.
 
@@ -27,6 +27,7 @@ Do not run mutating platform-module commands on a production NAS as part of ordi
 - Do not add copied code or binaries from reference projects without reviewing their licenses and explicitly documenting the actual reuse.
 - List external software or technical sources only when the project actually uses them as a dependency, copied source/binary, workflow action, or implemented integration target. Do not list projects consulted only as design references.
 - Redact real NAS addresses and login material from commits, fixtures, documentation, examples, and logs.
+- Keep the weekly Dependabot pull requests for GitHub Actions and Python package metadata reviewed; check the official Python support schedule when changing the supported-version floor.
 
 ## Pull requests
 

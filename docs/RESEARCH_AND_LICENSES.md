@@ -1,6 +1,6 @@
 # Research sources and licenses
 
-This record lists only software and technical sources that directly inform implemented behavior or are used by the repository's workflows.
+This record lists only software, services, and technical sources used by implemented behavior, repository automation, or the support policy.
 
 ## Project license
 
@@ -28,12 +28,20 @@ These external actions are invoked by the repository's workflows; none are bundl
 | [actions/upload-artifact](https://github.com/actions/upload-artifact) and [actions/download-artifact](https://github.com/actions/download-artifact) | Transfer built distributions between release jobs | MIT; [upload LICENSE](https://github.com/actions/upload-artifact/blob/main/LICENSE), [download LICENSE](https://github.com/actions/download-artifact/blob/main/LICENSE) |
 | [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) | Optional manual OIDC publication job | BSD-3-Clause; [LICENSE](https://github.com/pypa/gh-action-pypi-publish/blob/v1.14.3/LICENSE.md) |
 
+## Repository maintenance automation
+
+| Service | How this repository uses it | Distribution status |
+| --- | --- | --- |
+| GitHub Dependabot version updates | Checks GitHub Actions and Python build/test dependencies weekly and opens grouped minor/patch pull requests; major updates remain separate for review | GitHub-hosted repository feature; no code is bundled |
+
 ## Technical sources used
 
 | Source | Where it informs the project |
 | --- | --- |
 | [ASUSTOR DeadBolt security advisory](https://www.asustor.com/en/security/security_advisory_detail?id=9), [current security advisory index](https://www.asustor.com/zh-tw/security/security_advisory), [ADM release notes](https://www.asustor.com/zh-tw/service/release_notes), and [DeadBolt prevention guidance](https://www.asustor.com/zh-tw/knowledge/detail/?group_id=628&id=6) | The versioned DeadBolt-only audit, its limited affected-branch interpretation, and operator guidance; other advisories are not automatically checked |
 | [Linux thermal sysfs ABI](https://github.com/torvalds/linux/blob/master/Documentation/ABI/testing/sysfs-class-thermal) and [thermal sysfs API documentation](https://docs.kernel.org/driver-api/thermal/sysfs-api.html) | The read-only `/sys/class/thermal/thermal_zone*/temp` observation command |
+| [Python version status](https://devguide.python.org/versions/) | Determines the supported Python minimum and stable versions covered by CI |
+| [GitHub Dependabot configuration documentation](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference) | Configures weekly grouped updates for the GitHub Actions and `pip` ecosystems |
 | [PyPI Trusted Publisher documentation](https://docs.pypi.org/trusted-publishers/using-a-publisher/) | The optional OIDC package-publishing workflow |
 
 The technical documents are linked and paraphrased for factual guidance; their content remains with the respective rights holders. The project does not bundle their documentation or code.

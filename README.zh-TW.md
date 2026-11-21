@@ -21,7 +21,7 @@
 
 ## 安裝
 
-需要 Python 3.10 以上，以及作業系統提供的 OpenSSH 用戶端。執行期只使用 Python 標準函式庫。
+需要 Python 3.11 以上，以及作業系統提供的 OpenSSH 用戶端。執行期只使用 Python 標準函式庫。
 
 ```console
 python -m pip install .

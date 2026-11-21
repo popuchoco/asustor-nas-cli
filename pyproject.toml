@@ -5,10 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "asustor-nas-cli"
 dynamic = ["version"]
-description = "Safety-first Python CLI and read-only MCP server for ASUSTOR ADM diagnostics, temperature observations, ransomware checks, and guarded platform-module management"
+description = "Safety-first ASUSTOR ADM CLI and read-only MCP for NAS diagnostics, UPS and network observations, DeadBolt checks, report comparison, and guarded platform-module management"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = []
 
 keywords = ["asustor", "adm", "nas", "cli", "mcp", "security", "ransomware", "deadbolt"]
@@ -18,10 +18,10 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: System :: Systems Administration",
   "Topic :: Utilities",
 ]
@@ -47,7 +47,7 @@ where = ["src"]
 version = {attr = "asustor_nas_cli.__version__"}
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 100
 src = ["src", "tests"]
 

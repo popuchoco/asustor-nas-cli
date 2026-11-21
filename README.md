@@ -21,7 +21,7 @@ This project is an operations aid. It does not read file contents for malware, v
 
 ## Install
 
-Requirements: Python 3.10 or newer and the operating system's OpenSSH client. Runtime code uses only the Python standard library.
+Requirements: Python 3.11 or newer and the operating system's OpenSSH client. Runtime code uses only the Python standard library.
 
 ```console
 python -m pip install .

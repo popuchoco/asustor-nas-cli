@@ -11,7 +11,7 @@
 | ASUSTOR AS-202TE platform-module operations | Compatibility-gate evaluation | Refused: Linux 3.4 is below the driver project's Linux 6.1 floor; AS-202TE is not in its hardware allowlist |
 | Other ASUSTOR models / ADM releases | None | Not yet verified |
 
-CI also tests package installation and the `adm --version` entry point on Windows and macOS (Python 3.10 and 3.13). This validates workstation packaging only; it does not claim live NAS compatibility on those operating systems.
+CI tests the supported Python 3.11–3.14 range and checks package installation plus the `adm --version` entry point on Windows and macOS (Python 3.11 and 3.14). This validates workstation packaging only; it does not claim live NAS compatibility on those operating systems.
 
 The AS-202TE HTTPS certificate used during the live check was not trusted. Checks performed with `--insecure` explicitly report that TLS was not verified.
 
