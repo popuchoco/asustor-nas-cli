@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "asustor-nas-cli"
 dynamic = ["version"]
-description = "Safety-first Python CLI and read-only MCP server for ASUSTOR ADM diagnostics, ransomware checks, and guarded platform-module management"
+description = "Safety-first Python CLI and read-only MCP server for ASUSTOR ADM diagnostics, temperature observations, ransomware checks, and guarded platform-module management"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"

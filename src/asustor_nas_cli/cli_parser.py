@@ -118,6 +118,7 @@ def build_parser():
         ("network", "read network interface status over SSH"),
         ("disks", "list disks visible to ADM smartctl over SSH"),
         ("smart", "read SMART health status without starting drive tests"),
+        ("temperature", "read sysfs temperature observations without applying health thresholds"),
         ("disk-topology", "map physical disks, Linux RAID members, and volume mounts"),
     ):
         command_parser = commands.add_parser(name, help=description)

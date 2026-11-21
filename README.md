@@ -10,6 +10,7 @@ Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt
 
 - Runs fixed, read-only SSH commands for ADM system, storage, RAID, network, and disk observations.
 - Reads SMART health status without starting self-tests; standby drives are left unqueried.
+- Reads available Linux thermal-zone temperatures as observations, without applying model-specific health thresholds.
 - Maps physical disks, partitions, Linux software RAID arrays, and `/volumeN` mounts through `/sys` and `/proc`.
 - Audits a DeadBolt prevention baseline, scans a bounded set of filenames and ADM portal text for known indicators, and compares saved JSON reports.
 - Checks whether the host meets the kernel and hardware requirements for `asustor-platform-driver`; on supported Linux hosts, it can load or unload that driver family after creating a local state backup and completing explicit confirmation.
@@ -25,6 +26,8 @@ Requirements: Python 3.10 or newer and the operating system's OpenSSH client. Ru
 python -m pip install .
 adm --help
 ```
+
+For isolated installs, use `pipx install asustor-nas-cli` after the package is published. Windows PowerShell and offline wheel instructions are in [publishing and installation](docs/PUBLISHING.md).
 
 For local development without installing:
 
@@ -60,6 +63,7 @@ CLI JSON and MCP responses label the device as `NAS` and include a stable `host_
 | `adm status`, `health`, `storage`, `raid`, `network`, `disks` | Read ADM and Linux observations |
 | `adm disk-topology` | Map disks, partitions, md arrays, and volumes |
 | `adm smart` | Read SMART health status without starting self-tests |
+| `adm temperature` | Read available thermal-zone temperatures; no health thresholds are applied |
 | `adm security audit` | Review the DeadBolt prevention baseline |
 | `adm incident scan` | Search volume filenames and portal text for bounded DeadBolt indicators |
 | `adm security compare` | Compare two compatible audit or scan JSON reports |
@@ -70,6 +74,8 @@ CLI JSON and MCP responses label the device as `NAS` and include a stable `host_
 All NAS observation commands support `--json`. JSON reports use `schema_version: 1`; supported report schemas are in [`schemas/`](schemas/). Command exit codes are documented in the [CLI specification](docs/CLI_SPEC.md).
 
 `adm smart` runs only `smartctl -H -n standby` for supported block-device names. It does not start SMART self-tests or include disk serials/attributes; sleeping drives may be reported as unknown. This command has parser fixtures and schema coverage, but has not yet been exercised live on the AS-202TE.
+
+`adm temperature` reads `/sys/class/thermal/thermal_zone*/temp`, a read-only Linux thermal-zone interface whose values are reported in millidegrees Celsius. It exposes only generic zone IDs and Celsius values. Sensor coverage varies by model and kernel; no temperature thresholds or health verdicts are inferred. The command has parser fixtures and schema coverage, but has not yet been exercised live on the AS-202TE.
 
 ## DeadBolt prevention and detection
 
@@ -134,7 +140,7 @@ Configure your MCP client to launch `adm mcp` and provide its environment:
 }
 ```
 
-The server requires SSH key/agent authentication, uses fixed SSH commands, and exposes read-only tools only. `adm_platform_status` is read-only; module load, unload, and reset are not available over MCP. See [MCP and JSON interface details](docs/CLI_SPEC.md#mcp-interface).
+The server requires SSH key/agent authentication, uses fixed SSH commands, and exposes read-only tools only. It includes SMART and temperature observations plus `adm_security_compare`, which compares two report objects without connecting to the NAS. `adm_platform_status` is read-only; module load, unload, and reset are not available over MCP. See [MCP and JSON interface details](docs/CLI_SPEC.md#mcp-interface).
 
 ## Compatibility and test device
 
@@ -148,7 +154,7 @@ ADM 5.x and other ASUSTOR models are not claimed as tested by this project. See 
 
 The CLI follows the product conventions of [synology-nas-cli](https://github.com/akari-sora/synology-nas-cli) and [qnap-nas-cli](https://github.com/popuchoco/qnap-nas-cli): OS-named command, structured reports, MCP, explicit safety boundaries, compatibility notes, and reusable docs. The [reference review](docs/REFERENCE_REVIEW.md) explains what was adopted and what was excluded from the three ASUSTOR projects.
 
-See [architecture](docs/ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [change log](CHANGELOG.md), and [security policy](SECURITY.md).
+See [architecture](docs/ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [publishing and installation](docs/PUBLISHING.md), [change log](CHANGELOG.md), and [security policy](SECURITY.md).
 
 ## License
 

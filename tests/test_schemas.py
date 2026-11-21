@@ -18,6 +18,7 @@ from asustor_nas_cli.security import (
     compare_reports,
 )
 from asustor_nas_cli.smart_health import parse_smart_health_output
+from asustor_nas_cli.temperature import parse_temperature_output
 from asustor_nas_cli.topology import parse_disk_topology
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -106,6 +107,13 @@ class PublishedSchemaTests(unittest.TestCase):
             host="NAS",
             ssh_port=22,
         )
+        temperature = parse_temperature_output(
+            "__ADM_TEMP_BEGIN__\n"
+            "__ADM_TEMP_SENSOR__=thermal_zone0|42000\n"
+            "__ADM_TEMP_END__\n",
+            host="NAS",
+            ssh_port=22,
+        )
         operation = {
             "schema_version": 1,
             "report_type": "platform-module-operation",
@@ -131,6 +139,7 @@ class PublishedSchemaTests(unittest.TestCase):
             "platform-status": status,
             "security-audit": audit,
             "smart-health": smart,
+            "temperature-observation": temperature,
         }
         self.assertEqual(set(samples), set(SCHEMAS))
         for name, report in samples.items():

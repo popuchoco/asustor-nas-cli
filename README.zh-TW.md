@@ -10,6 +10,7 @@
 
 - 透過固定、唯讀的 SSH 指令查詢 ADM 系統、容量、RAID、網路和磁碟資訊。
 - 讀取 SMART 健康狀態，不會啟動磁碟自我測試；待機磁碟會略過查詢。
+- 讀取 Linux thermal-zone 溫度觀察值；不套用機型專屬健康門檻。
 - 從 `/sys` 與 `/proc` 建立實體磁碟、分割區、Linux 軟體 RAID 和 `/volumeN` 掛載點的對應。
 - 稽核 DeadBolt 防護基線、在有限時間與命中數內搜尋檔名及 ADM 管理頁線索，並比對 JSON 報告。
 - 檢查 NAS 是否符合 `asustor-platform-driver` 的核心版本及硬體需求；符合條件時，可在建立本機狀態備份並完成明確確認後載入或卸載驅動模組。
@@ -25,6 +26,8 @@
 python -m pip install .
 adm --help
 ```
+
+套件發布後可使用 `pipx install asustor-nas-cli` 隔離安裝。Windows PowerShell 和離線 wheel 安裝方式見[發布與安裝說明](docs/PUBLISHING.md)。
 
 開發期間可從原始碼目錄執行：
 
@@ -60,6 +63,7 @@ CLI JSON 和 MCP 回應會以 `NAS` 作為主機標籤，並提供穩定的 `hos
 | `adm status`、`health`、`storage`、`raid`、`network`、`disks` | 讀取 ADM 與 Linux 狀態 |
 | `adm disk-topology` | 對應磁碟、分割區、md 陣列與資料卷 |
 | `adm smart` | 讀取 SMART 健康狀態，不啟動磁碟自我測試 |
+| `adm temperature` | 讀取可用的 thermal-zone 溫度；不套用健康門檻 |
 | `adm security audit` | 檢視 DeadBolt 事前防護基線 |
 | `adm incident scan` | 有界限地搜尋資料卷檔名和管理頁 DeadBolt 線索 |
 | `adm security compare` | 比對相容的稽核或掃描 JSON 報告 |
@@ -70,6 +74,8 @@ CLI JSON 和 MCP 回應會以 `NAS` 作為主機標籤，並提供穩定的 `hos
 NAS 資料查詢指令支援 `--json`。JSON 報告使用 `schema_version: 1`，規格位於 [`schemas/`](schemas/)。退出碼見[指令規格](docs/CLI_SPEC.md)。
 
 `adm smart` 只對支援的區塊裝置名稱執行 `smartctl -H -n standby`，不會啟動 SMART 自我測試，也不輸出磁碟序號或屬性；待機磁碟可能回報未知。此指令目前有解析器與 schema 測試，尚未在 AS-202TE 實機執行。
+
+`adm temperature` 讀取 `/sys/class/thermal/thermal_zone*/temp` 唯讀介面，並將毫攝氏度換算為攝氏度；輸出只含通用區域編號和讀值。感測器可用性依機型和核心而異，工具不會推測溫度門檻或健康結論。此指令目前有解析器與 schema 測試，尚未在 AS-202TE 實機執行。
 
 ## DeadBolt 勒索病毒防範與檢測
 
@@ -134,7 +140,7 @@ adm platform module --reset --host NAS-IP --user nas-user \
 }
 ```
 
-伺服器需要 SSH 金鑰／agent 驗證，只執行固定 SSH 指令並提供唯讀工具。`adm_platform_status` 只讀取支援狀態；MCP 不提供載入、卸載或重設模組功能。更多細節見[指令規格](docs/CLI_SPEC.md#mcp-interface)。
+伺服器需要 SSH 金鑰／agent 驗證，只執行固定 SSH 指令並提供唯讀工具。新增 SMART、溫度觀察，以及不連線 NAS、直接比對兩份報告物件的 `adm_security_compare`。`adm_platform_status` 只讀取支援狀態；MCP 不提供載入、卸載或重設模組功能。更多細節見[指令規格](docs/CLI_SPEC.md#mcp-interface)。
 
 ## 相容性與實機驗證
 
@@ -148,7 +154,7 @@ adm platform module --reset --host NAS-IP --user nas-user \
 
 指令結構參照 [Synology NAS CLI](https://github.com/akari-sora/synology-nas-cli) 與 [QNAP NAS CLI](https://github.com/popuchoco/qnap-nas-cli)：以作業系統名稱為指令開頭、提供結構化報告、MCP、明確安全邊界、相容性說明與可重用文件。[參考專案比對](docs/REFERENCE_REVIEW.md)說明三個 ASUSTOR 專案的採納與排除範圍。
 
-另見[架構](docs/ARCHITECTURE.md)、[貢獻指南](CONTRIBUTING.md)、[更新紀錄](CHANGELOG.md)和[安全政策](SECURITY.md)。
+另見[架構](docs/ARCHITECTURE.md)、[貢獻指南](CONTRIBUTING.md)、[發布與安裝](docs/PUBLISHING.md)、[更新紀錄](CHANGELOG.md)和[安全政策](SECURITY.md)。
 
 ## 授權
 

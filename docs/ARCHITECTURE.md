@@ -26,12 +26,14 @@ MCP and ordinary inspection commands are read-only. Kernel-module load/unload is
 | `cli_security.py` | DeadBolt audit, incident-scan, and report-comparison handlers |
 | `cli_platform.py` | Guarded platform-module command flow |
 | `cli_smart.py` | Read-only SMART health command handler |
+| `cli_temperature.py` | Read-only thermal-zone temperature handler |
 | `client.py` | HTTPS probe and OpenSSH transport; no password storage |
 | `commands.py` | Fixed ADM/Linux query allowlist and section parser |
 | `topology.py` | Parse `/sys/block`, `/proc/mdstat`, and `/proc/mounts` observations |
 | `security/` | DeadBolt audit rules, bounded scan parser, report comparison, rendering |
 | `platform.py` | Platform-driver preflight, module-state backup/validation, fixed load/unload plan |
 | `smart_health.py` | Fixed SMART health command and privacy-preserving status parser |
+| `temperature.py` | Fixed thermal-zone sysfs query and temperature observation parser |
 | `mcp.py` | Dependency-free JSON-RPC/MCP stdio server using read-only functions |
 
 ## Guarded platform-module flow
@@ -51,6 +53,7 @@ The backup captures loaded/unloaded state only. It does not capture driver binar
 - No dynamic remote shell command assembled from arbitrary user input.
 - No password or private key contents in reports.
 - No serial numbers or SMART health in disk-topology output.
+- Temperature reports contain generic thermal-zone IDs and values only; no model thresholds or health verdicts are inferred.
 - No writes through MCP.
 - No claim of a clean infection scan from the absence of filename/portal indicators.
 - `schema_version` changes only when a report's required structure or interpretation changes.

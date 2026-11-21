@@ -9,6 +9,7 @@ from asustor_nas_cli.platform import (
 )
 from asustor_nas_cli.security import build_scan_command
 from asustor_nas_cli.smart_health import build_smart_health_command
+from asustor_nas_cli.temperature import build_temperature_command
 
 
 class RemoteCommandSyntaxTests(unittest.TestCase):
@@ -34,6 +35,7 @@ class RemoteCommandSyntaxTests(unittest.TestCase):
     def test_scanner_and_smart_commands_parse_as_posix_shell(self):
         self.assert_shell_syntax(build_scan_command(10, 5))
         self.assert_shell_syntax(build_smart_health_command())
+        self.assert_shell_syntax(build_temperature_command())
 
     def test_module_operation_commands_parse_as_posix_shell(self):
         target = {module: True for module in DRIVER_MODULES}

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 — 2026-11-21
+
+- Add `adm temperature` for read-only Linux thermal-zone temperature observations; no model-specific thresholds or health verdicts are applied.
+- Add MCP tools for SMART health, temperature observations, and offline comparison of bounded security-report objects.
+- Add the temperature observation JSON Schema, schema coverage, and shell-command checks.
+- Add reproducible wheel/sdist build checks and an opt-in PyPI Trusted Publisher workflow with installation guidance.
+- State explicitly that temperature and SMART commands have not been live-tested on the AS-202TE.
+
 ## 0.5.0 — 2026-11-21
 
 - Add `adm smart` for read-only SMART health status; no self-tests are started and standby drives are skipped.

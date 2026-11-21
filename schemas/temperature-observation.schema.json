@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/popuchoco/asustor-nas-cli/blob/main/schemas/temperature-observation.schema.json",
+  "title": "ASUSTOR sysfs temperature observation",
+  "type": "object",
+  "required": ["schema_version", "report_type", "generated_at", "host", "host_id", "ssh_port", "scope", "coverage", "parse_errors", "sensors", "summary", "notes"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_type": {"const": "temperature-observation"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "host": {"type": ["string", "null"]},
+    "host_id": {"type": ["string", "null"]},
+    "ssh_port": {"type": ["integer", "null"]},
+    "scope": {
+      "type": "object",
+      "required": ["operation", "thresholds_applied"],
+      "properties": {
+        "operation": {"const": "read thermal-zone sysfs temperature inputs"},
+        "thresholds_applied": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "coverage": {"enum": ["complete", "partial", "unavailable"]},
+    "parse_errors": {"type": "integer", "minimum": 0},
+    "sensors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sensor", "celsius"],
+        "properties": {
+          "sensor": {"type": "string", "pattern": "^thermal_zone[0-9]+$"},
+          "celsius": {"type": "number", "minimum": -273.15, "maximum": 1000}
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["sensor_count", "minimum_celsius", "maximum_celsius"],
+      "properties": {
+        "sensor_count": {"type": "integer", "minimum": 0},
+        "minimum_celsius": {"type": ["number", "null"]},
+        "maximum_celsius": {"type": ["number", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "notes": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false
+}

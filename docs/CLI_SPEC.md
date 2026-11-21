@@ -24,6 +24,7 @@
 | `network` | `ip -o link/addr` | `network` |
 | `disks` | `smartctl --scan`; no SMART health | `disks` |
 | `smart` | `smartctl -H -n standby`; health only, no self-test or drive wake-up | `smart-health`, schema v1 |
+| `temperature` | Read `/sys/class/thermal/thermal_zone*/temp`; observations only, no threshold verdict | `temperature-observation`, schema v1 |
 | `disk-topology` | `/sys/block`, `/proc/mdstat`, `/proc/mounts` | `disk-topology`, schema v1 |
 | `security audit` | ADM portal version + local TCP listeners + operator assertions | `security-audit`, schema v1 |
 | `incident scan` | Bounded filename scan + ADM portal text | `incident-scan`, schema v1 |
@@ -66,6 +67,7 @@ Schemas use JSON Schema Draft 2020-12 and are published under [`schemas/`](../sc
 - `platform-module-backup.schema.json`
 - `platform-module-operation.schema.json`
 - `smart-health.schema.json`
+- `temperature-observation.schema.json`
 
 For each schema version, required field meaning is stable. Parsers should ignore unknown optional fields. `schema_version` is an integer, not the CLI package version.
 
@@ -83,8 +85,12 @@ Warnings and unknown audit checks return `1`. Disk topology returns `1` when an 
 
 `adm smart` returns `0` only when every observed supported drive reports a passing SMART health status. It returns `2` when a drive reports a failed status and `1` when the tool, device, or coverage is unavailable or incomplete. The command never starts a SMART self-test.
 
+`adm temperature` returns `0` when at least one generic thermal-zone reading is parsed completely. It returns `1` if readings are unavailable or incomplete. Values are converted from millidegrees Celsius as specified by the Linux thermal-zone sysfs interface; this command does not apply model-specific thresholds or report a thermal-health verdict.
+
 ## MCP interface
 
-`adm mcp` implements JSON-RPC 2.0 over stdio and uses the same read-only observation functions. It advertises read-only tool annotations. Tools include `adm_status`, `adm_health`, `adm_storage`, `adm_raid`, `adm_network`, `adm_disks`, `adm_disk_topology`, `adm_platform_status`, `adm_security_audit`, and `adm_incident_scan`.
+`adm mcp` implements JSON-RPC 2.0 over stdio and uses the same read-only observation functions. It advertises read-only tool annotations. Tools include `adm_status`, `adm_health`, `adm_storage`, `adm_raid`, `adm_network`, `adm_disks`, `adm_smart`, `adm_temperature`, `adm_disk_topology`, `adm_platform_status`, `adm_security_audit`, `adm_security_compare`, and `adm_incident_scan`.
+
+`adm_security_compare` accepts two JSON report objects (security audit or incident scan, schema version 1), enforces a 1 MB limit per report, and does not connect to the NAS or access local files. `adm_smart` and `adm_temperature` use fixed read-only SSH commands. Temperature sensors may be unavailable on older kernels or models.
 
 MCP configuration is supplied only through environment variables: `ASUSTOR_HOST`, `ASUSTOR_USER`, `ASUSTOR_SSH_PORT`, `ASUSTOR_HTTPS_PORT`, `ASUSTOR_TIMEOUT`, `ASUSTOR_SSH_IDENTITY_FILE`, `ASUSTOR_CA`, and `ASUSTOR_INSECURE`. MCP SSH uses batch mode; configure an SSH key/agent before launching the server. Mutating module operations are intentionally absent from MCP.

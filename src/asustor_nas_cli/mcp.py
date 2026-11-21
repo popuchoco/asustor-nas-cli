@@ -17,7 +17,10 @@ from .security import (
     build_incident_report,
     build_scan_command,
     build_security_audit,
+    compare_reports,
 )
+from .smart_health import build_smart_health_command, parse_smart_health_output
+from .temperature import build_temperature_command, parse_temperature_output
 from .topology import parse_disk_topology
 
 PROTOCOL_VERSIONS = ("2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05")
@@ -29,7 +32,9 @@ READ_ONLY = {
 }
 INSTRUCTIONS = (
     "Read-only tools for one ASUSTOR ADM NAS. SSH commands are fixed and allow-listed. "
-    "No tool changes NAS data or services. File-name IOC scans are bounded and are not proof of no infection."
+    "No tool changes NAS data or services. Temperature readings are observations, not health verdicts. "
+    "Report comparison accepts bounded report objects and does not connect to the NAS. "
+    "File-name IOC scans are bounded and are not proof of no infection."
 )
 
 
@@ -55,6 +60,13 @@ AUDIT_ARGUMENTS = _object(
         "remote_access_reviewed": {"type": "boolean", "description": "Operator assertion; router state is not read."},
     }
 )
+COMPARE_ARGUMENTS = _object(
+    {
+        "before": {"type": "object", "description": "Earlier security-audit or incident-scan JSON report."},
+        "after": {"type": "object", "description": "Later report of the same type and NAS."},
+    },
+    required=("before", "after"),
+)
 
 TOOLS = [
     {"name": "adm_status", "description": "Read system, CPU, memory and uptime observations over fixed SSH commands.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
@@ -63,9 +75,12 @@ TOOLS = [
     {"name": "adm_raid", "description": "Read Linux software RAID status from /proc/mdstat.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_network", "description": "Read network interface and address observations.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_disks", "description": "List disk paths reported by smartctl; does not read SMART health attributes.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
+    {"name": "adm_smart", "description": "Read SMART health status without starting self-tests or waking standby drives.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
+    {"name": "adm_temperature", "description": "Read temperature values exposed by sysfs; no model-specific health thresholds are applied.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_disk_topology", "description": "Map sysfs disk models and sizes to partitions, md arrays and mounted volumes; excludes serial numbers and SMART health.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_platform_status", "description": "Read kernel, DMI and loaded-module state to report whether guarded platform-driver control is supported; does not change modules or hardware state.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_security_audit", "description": "Read-only DeadBolt prevention baseline; some controls remain unknown or are operator assertions.", "inputSchema": AUDIT_ARGUMENTS, "annotations": READ_ONLY},
+    {"name": "adm_security_compare", "description": "Compare two saved security-audit or incident-scan report objects without connecting to the NAS.", "inputSchema": COMPARE_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_incident_scan", "description": "Bounded read-only .deadbolt filename and ADM portal indicator scan; never returns a clean verdict.", "inputSchema": SCAN_ARGUMENTS, "annotations": READ_ONLY},
 ]
 
@@ -176,11 +191,42 @@ def _validate_arguments(name, arguments):
         for key, value in arguments.items():
             if type(value) is not bool:
                 raise McpError(f"{key} must be a boolean")
+    if name == "adm_security_compare":
+        for key in ("before", "after"):
+            report = arguments.get(key)
+            if not isinstance(report, dict):
+                raise McpError(f"{key} must be a report object")
+            if len(json.dumps(report, ensure_ascii=False).encode("utf-8")) > 1_000_000:
+                raise McpError(f"{key} report exceeds the 1 MB limit")
+            if type(report.get("schema_version")) is not int or report["schema_version"] != 1:
+                raise McpError(f"{key} is not a supported ADM CLI report")
+            if report.get("report_type") not in {"security-audit", "incident-scan"}:
+                raise McpError(f"{key} report type is not supported for comparison")
+            if not isinstance(report.get("host"), str) or not report["host"]:
+                raise McpError(f"{key} report is missing its host label")
+            if not isinstance(report.get("rule_set"), str) or not report["rule_set"]:
+                raise McpError(f"{key} report is missing its rule set")
+            item_key = "checks" if report["report_type"] == "security-audit" else "findings"
+            items = report.get(item_key)
+            if not isinstance(items, list) or any(
+                not isinstance(item, dict)
+                or not isinstance(item.get("id"), str)
+                or not isinstance(item.get("status"), str)
+                for item in items
+            ):
+                raise McpError(f"{key} report has invalid {item_key}")
+            if report["report_type"] == "incident-scan":
+                if not isinstance(report.get("scope"), dict):
+                    raise McpError(f"{key} incident report is missing its scope")
+                if not isinstance(report.get("coverage"), dict):
+                    raise McpError(f"{key} incident report is missing its coverage")
 
 
 def call_tool(name, arguments=None):
     arguments = {} if arguments is None else arguments
     _validate_arguments(name, arguments)
+    if name == "adm_security_compare":
+        return compare_reports(arguments["before"], arguments["after"])
     args = _settings()
 
     section_by_tool = {
@@ -201,6 +247,61 @@ def call_tool(name, arguments=None):
             "ok": True,
             "sections": sections,
         }
+    if name == "adm_smart":
+        try:
+            output = run_ssh(
+                args.host,
+                args.user,
+                args.port,
+                build_smart_health_command(),
+                max(args.timeout, 60),
+                identity_file=args.identity_file,
+                batch=True,
+            )
+            report = parse_smart_health_output(
+                output,
+                host=REDACTED_HOST,
+                ssh_port=args.port,
+                host_id=host_fingerprint(args.host),
+            )
+        except CliError as error:
+            report = parse_smart_health_output(
+                "",
+                host=REDACTED_HOST,
+                ssh_port=args.port,
+                host_id=host_fingerprint(args.host),
+            )
+            report["coverage"] = "unavailable"
+            report["tool_error"] = "ssh_unavailable"
+            report["notes"].append(redact_sensitive_text(error, args.host, args.user))
+        return report
+    if name == "adm_temperature":
+        try:
+            output = run_ssh(
+                args.host,
+                args.user,
+                args.port,
+                build_temperature_command(),
+                args.timeout,
+                identity_file=args.identity_file,
+                batch=True,
+            )
+            report = parse_temperature_output(
+                output,
+                host=REDACTED_HOST,
+                ssh_port=args.port,
+                host_id=host_fingerprint(args.host),
+            )
+        except CliError as error:
+            report = parse_temperature_output(
+                "",
+                host=REDACTED_HOST,
+                ssh_port=args.port,
+                host_id=host_fingerprint(args.host),
+            )
+            report["coverage"] = "unavailable"
+            report["notes"].append(redact_sensitive_text(error, args.host, args.user))
+        return report
     if name == "adm_disk_topology":
         sections = _ssh_sections(args, ("disk_topology",))
         report = parse_disk_topology(sections["disk_topology"], host=REDACTED_HOST)
