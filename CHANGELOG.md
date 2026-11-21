@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.0 — 2026-11-21
+
+- Add a platform installation guide for Windows, macOS, and Ubuntu using the reviewed GitHub source tag and isolated `pipx` environments; do not imply that PyPI publication has occurred.
+- Add CI wheel/sdist build validation, artifact retention, and an installed-wheel CLI smoke test; require the release workflow's installed `adm --version` to match the pushed tag.
+- Standardize readable diagnostic-summary text fields and make empty risk-signal output explicit; clarify report-specific `state`, shared `coverage`, and exit-code semantics.
+- Improve storage-summary parsing for case-insensitive `df` headers, mount points with spaces, and impossible usage percentages; malformed rows now stay out of schema-bound values and mark coverage partial.
+- Refine read-only MCP summary tool descriptions and add concrete anomaly interpretation examples to the cookbook and troubleshooting guide.
+
 ## 1.8.0 — 2026-11-21
 
 - Raise the supported Python minimum to 3.11 after Python 3.10 reached end of life; test Python 3.11–3.14 in CI and build release distributions on 3.14.

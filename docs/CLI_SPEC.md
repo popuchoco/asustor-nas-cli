@@ -51,6 +51,22 @@ The `diagnostic-summary` schema is versioned independently from the package rele
 
 The `health --summary` and `risk-signals` reports include service, UPS, and TCP observations under `summary.observations`. These are not entries in the `risk_signals` array and do not alter the summary state or health exit-code policy. Each observation records its own coverage.
 
+### Summary state and coverage
+
+`coverage` uses the same three values across diagnostic and risk-signals reports:
+
+| Value | Meaning |
+| --- | --- |
+| `complete` | The command returned enough expected data for its parser checks to complete. This describes collection and parsing, not device health. |
+| `partial` | Some values were usable, but expected output was missing, malformed, or limited. |
+| `unavailable` | No usable observation was available from that source. |
+
+The health summary's top-level coverage is complete only when all required component sources are complete. It is unavailable when all those sources are unavailable; mixed or partial source coverage produces partial. Service, UPS, and TCP observations expose their own coverage but do not change health summary coverage, state, or exit code. The optional raw network and disk-list sections are recorded separately under `additional_sections`.
+
+`state` is report-specific. Status and storage summaries use `observed` only with complete coverage, otherwise `unknown`. Health and risk-signals summaries use `attention` when a configured RAID, SMART, or thermal signal is observed; otherwise they use `observed` for complete coverage or `unknown` for incomplete coverage. A RAID component has its own state (`degraded`, `unknown`, `observed`, or `no_arrays`); a well-formed `/proc/mdstat` response with no arrays is `no_arrays`, not proof of a healthy storage pool. SMART uses `passed`, `failed`, or `unknown`.
+
+With `--exit-on-warning`, a detected signal takes precedence and returns `2`, including when other sources are incomplete. Without a signal, incomplete coverage returns `1`; complete observations without signals return `0`. These states and codes describe the collected observations only. `unknown`, `no_arrays`, or an empty risk-signal list must not be interpreted as a clean bill of health.
+
 `disk-topology` records device model and size but excludes serial numbers and SMART health. Array state reflects the kernel's md status output, not a full filesystem or drive-health assessment.
 
 The `firmware.deadbolt_patch` result is scoped to ASUSTOR advisory [AS-2022-008](https://www.asustor.com/en/security/security_advisory_detail?id=9). ADM 4.1+ and 5.x are not listed among that notice's affected branches, so the check reports them outside its scope. A pass does not mean the installed firmware is current or that other vulnerabilities are fixed; review the [current security advisories](https://www.asustor.com/en/security/security_advisory) and [ADM release notes](https://www.asustor.com/zh-tw/service/release_notes).

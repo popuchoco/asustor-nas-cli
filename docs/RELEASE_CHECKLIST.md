@@ -7,6 +7,8 @@
 - [ ] Update both README files, `docs/CLI_SPEC.md`, schemas, and compatibility notes for every changed behavior.
 - [ ] Run `python -m unittest discover --start-directory tests --verbose` and `ruff check .`.
 - [ ] Build and inspect package metadata: `python -m build --sdist --wheel` and `python -m twine check --strict dist/*`.
+- [ ] Confirm CI's package-build job installed the wheel and ran `adm --version`; confirm the release tag workflow matched the installed command version to the tag.
+- [ ] Review `install.md` commands for Windows, macOS, and Ubuntu and confirm they install the intended tagged version without claiming that an unpublished PyPI package is available.
 - [ ] Review the staged diff for real NAS addresses, usernames/passwords, SSH keys, serial numbers, raw incident output, and local backup files.
 - [ ] Check that generated report examples validate against every published JSON Schema.
 - [ ] Confirm that read-only MCP tools remain annotated read-only and that mutating module operations stay outside MCP.

@@ -52,6 +52,24 @@ class StructuredSummaryTests(unittest.TestCase):
         summary = parse_storage_summary("/dev/md1 1T 500G 500G 50% /volume1")
         self.assertEqual(summary["coverage"], "partial")
 
+    def test_storage_summary_accepts_case_insensitive_header_and_mountpoint_spaces(self):
+        summary = parse_storage_summary(
+            "filesystem size used avail use% mounted on\n"
+            "/dev/md1 1T 500G 500G 50% /volume with space\n"
+        )
+        self.assertEqual(summary["coverage"], "complete")
+        self.assertEqual(summary["filesystems"][0]["mountpoint"], "/volume with space")
+
+    def test_storage_summary_rejects_impossible_usage_percentage(self):
+        summary = parse_storage_summary(
+            "Filesystem Size Used Avail Use% Mounted on\n"
+            "/dev/md1 1T 1T 0 101% /volume1\n"
+        )
+        self.assertEqual(summary["filesystem_count"], 0)
+        self.assertEqual(summary["maximum_use_percent"], None)
+        self.assertEqual(summary["parse_errors"], 1)
+        self.assertEqual(summary["coverage"], "partial")
+
     def test_raid_summary_detects_degraded_array(self):
         summary = parse_raid_summary(RAID)
         self.assertEqual(summary["state"], "degraded")
@@ -77,6 +95,7 @@ class StructuredSummaryTests(unittest.TestCase):
         self.assertEqual(report["summary"]["recommended_exit_code"], 2)
         self.assertEqual(report["host"], "NAS")
         text = format_diagnostic_summary(report)
+        self.assertIn("recommended_exit_code: 2", text)
         self.assertIn("raid_degraded", text)
         self.assertIn("raw raid", text)
 
@@ -112,6 +131,10 @@ class StructuredSummaryTests(unittest.TestCase):
         self.assertEqual(summary["smart"]["unknown_count"], 0)
         self.assertEqual(summary["smart"]["unknown_devices"], [])
         self.assertEqual(summary["temperature"]["high_sensors"], [{"sensor": "thermal_zone0", "celsius": 85.0}])
+        text = format_diagnostic_summary(report)
+        self.assertIn("Configured risk signals:", text)
+        self.assertIn("Operations observations:", text)
+        self.assertIn("incomplete coverage is not a clean bill of health", text)
 
     def test_health_summary_marks_missing_observations_unknown(self):
         smart = parse_smart_health_output("")

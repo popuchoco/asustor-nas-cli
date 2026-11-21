@@ -62,13 +62,19 @@ def parse_storage_summary(output):
         columns = line.split()
         if not columns:
             continue
-        if columns[0].lower() == "filesystem":
-            if columns[:6] == ["Filesystem", "Size", "Used", "Avail", "Use%", "Mounted"] and columns[6:] == ["on"]:
+        if columns[0].casefold() == "filesystem":
+            normalized_header = [column.casefold() for column in columns]
+            expected_header = ["filesystem", "size", "used", "avail", "use%", "mounted", "on"]
+            if normalized_header == expected_header and not header_seen:
                 header_seen = True
             else:
                 parse_errors += 1
             continue
-        if len(columns) < 6 or not re.fullmatch(r"\d{1,3}%", columns[4]):
+        if len(columns) < 6:
+            parse_errors += 1
+            continue
+        percentage = re.fullmatch(r"(\d{1,3})%", columns[4])
+        if not percentage or int(percentage.group(1)) > 100:
             parse_errors += 1
             continue
         filesystems.append(
@@ -77,8 +83,8 @@ def parse_storage_summary(output):
                 "size": columns[1],
                 "used": columns[2],
                 "available": columns[3],
-                "use_percent": int(columns[4][:-1]),
-                "mountpoint": columns[5],
+                "use_percent": int(percentage.group(1)),
+                "mountpoint": " ".join(columns[5:]),
             }
         )
     result = {
@@ -363,44 +369,70 @@ def build_risk_signals_report(health_report):
 def format_diagnostic_summary(report):
     summary = report["summary"]
     lines = [
-        f"{report['command'].title()} summary: {summary['state']} | coverage: {summary['coverage']} | recommended exit code: {summary['recommended_exit_code']}"
+        f"{report['command'].title()} summary",
+        f"  state: {summary['state']}",
+        f"  coverage: {summary['coverage']}",
+        f"  recommended_exit_code: {summary['recommended_exit_code']}",
     ]
     if "system" in summary:
         system = summary["system"]
         memory = system.get("memory_mib") or {}
         lines.append(
             "System: "
-            f"{system.get('kernel') or 'kernel unknown'}; "
-            f"memory {memory.get('used_mib', '?')}/{memory.get('total_mib', '?')} MiB"
+            f"kernel={system.get('kernel') or 'unknown'}; "
+            f"uptime={system.get('uptime') or 'unknown'}; "
+            f"memory_used_mib={memory.get('used_mib', '?')}; "
+            f"memory_total_mib={memory.get('total_mib', '?')}"
         )
     if "storage" in summary:
         storage = summary["storage"]
         lines.append(
-            f"Storage: {storage['filesystem_count']} filesystem(s); "
-            f"maximum use {storage['maximum_use_percent']}%" if storage["maximum_use_percent"] is not None
-            else f"Storage: {storage['filesystem_count']} filesystem(s); usage unavailable"
+            f"Storage: filesystem_count={storage['filesystem_count']}; "
+            f"maximum_use_percent={storage['maximum_use_percent']}"
+            if storage["maximum_use_percent"] is not None
+            else f"Storage: filesystem_count={storage['filesystem_count']}; maximum_use_percent=unavailable"
         )
     if "raid" in summary:
         raid = summary["raid"]
         lines.append(
-            f"RAID: {raid['state']} | {raid['array_count']} array(s); "
-            f"degraded: {', '.join(raid['degraded_arrays']) or 'none'}"
+            f"RAID: state={raid['state']}; array_count={raid['array_count']}; "
+            f"degraded_arrays={', '.join(raid['degraded_arrays']) or 'none'}"
         )
     if "smart" in summary:
         smart = summary["smart"]
         lines.append(
-            f"SMART: {smart['state']} | {smart['device_count']} device(s), "
-            f"failed {smart['failed_count']} ({', '.join(smart['failed_devices']) or 'none'}), "
-            f"unknown {smart['unknown_count']} ({', '.join(smart['unknown_devices']) or 'none'})"
+            f"SMART: state={smart['state']}; device_count={smart['device_count']}; "
+            f"failed_count={smart['failed_count']} ({', '.join(smart['failed_devices']) or 'none'}); "
+            f"unknown_count={smart['unknown_count']} ({', '.join(smart['unknown_devices']) or 'none'})"
         )
     if "temperature" in summary:
         temperature = summary["temperature"]
         lines.append(
-            f"Temperature: {temperature['coverage']} | {temperature['sensor_count']} sensor(s); "
-            f"high {temperature['high_count']} at >= {temperature['warning_threshold_celsius']:g} °C"
+            f"Temperature: coverage={temperature['coverage']}; sensor_count={temperature['sensor_count']}; "
+            f"high_count={temperature['high_count']}; "
+            f"warning_threshold_celsius={temperature['warning_threshold_celsius']:g}"
         )
-    for signal in summary["risk_signals"]:
-        lines.append(f"[{signal['severity']}] {signal['code']}: {signal['message']}")
+    risk_signals = summary.get("risk_signals", [])
+    lines.append("Configured risk signals:")
+    if risk_signals:
+        for signal in risk_signals:
+            lines.append(f"  - {signal['severity']} {signal['code']}: {signal['message']}")
+    else:
+        lines.append("  none observed")
+    if "observations" in summary:
+        observations = summary["observations"]
+        services = observations.get("services", {})
+        ups = observations.get("ups", {})
+        connections = observations.get("connections", {})
+        lines.append(
+            "Operations observations: "
+            f"services_coverage={services.get('coverage', 'unavailable')}; "
+            f"process_names_observed={len(services.get('processes', []))}; "
+            f"ups_coverage={ups.get('coverage', 'unavailable')}; "
+            f"ups_devices_observed={len(ups.get('devices', []))}; "
+            f"connections_coverage={connections.get('coverage', 'unavailable')}"
+        )
+    lines.append("Observations only; incomplete coverage is not a clean bill of health.")
     for name, output in report["sections"].items():
         lines.extend((f"--- raw {name} ---", output or "(no output)"))
     return "\n".join(lines)

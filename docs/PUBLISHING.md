@@ -1,5 +1,7 @@
 # Building and publishing
 
+End-user installation steps for Windows, macOS, and Ubuntu are in the root [install guide](../install.md). The guide installs the reviewed source tag through pipx; PyPI is a separate, optional manual release step.
+
 ## Local build
 
 Use Python 3.11 or newer from a clean checkout:

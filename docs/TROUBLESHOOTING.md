@@ -41,6 +41,16 @@ A `partial` or `unavailable` coverage state means the CLI could not collect or p
 - `adm services` reads exact process names from a fixed `/proc/*/comm` allowlist. Partial or unavailable coverage means names could not be observed, not that a service should be running.
 - `adm connections` counts TCP states from `/proc/net/tcp` and `/proc/net/tcp6`. A missing table produces partial coverage; addresses and ports are never returned.
 
+### Reading summary states and parser errors
+
+`coverage` describes how much expected output could be collected and parsed. `complete` means the command's parser checks passed; it does not mean that the NAS is healthy. `partial` means some observations were usable but output was missing, malformed, or limited. `unavailable` means that source provided no usable observation.
+
+`state` depends on the report type. A health summary with `state=unknown`, `coverage=partial`, `risk_signals=[]`, and exit code `1` means no configured signal was seen in available data, while at least one required source remains incomplete. Review its component coverage and raw sections. If a signal is present, `attention` and recommended exit code `2` take precedence even if another component is incomplete.
+
+For RAID, `no_arrays` means a valid `/proc/mdstat` response listed no software RAID arrays; it does not assess other storage layers. `degraded` means the kernel reported missing array members and warrants review in ADM. For SMART, `unknown` is not `passed`. A thermal warning refers to a generic `thermal_zoneN`, not a known physical component. Storage summaries report the maximum parsed use but do not apply a capacity threshold.
+
+Malformed storage rows increase `parse_errors` and make coverage partial. A percentage outside 0–100 is rejected instead of being included in the summary; a mount point containing spaces is preserved as one field. Check whether the NAS command output or firmware differs from the parser's expected `df -hP` format, and retain the raw section when reporting a compatibility issue.
+
 ## Platform-module control is blocked
 
 The module commands are allowed only when the reported kernel is Linux 6.1 or newer, the exact DMI vendor/product pair is allowlisted, no conflicting `it87` module blocks the requested load, and the fixed `modprobe -n` plan succeeds.

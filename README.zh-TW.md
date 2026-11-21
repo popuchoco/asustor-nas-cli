@@ -4,7 +4,7 @@
 
 以 Python 撰寫的 ASUSTOR ADM NAS 安全優先命令列工具，提供唯讀診斷、磁碟拓樸、DeadBolt 勒索病毒防護檢查，以及有相容性閘門的核心模組管理。指令名稱為 `adm`，取自 ASUSTOR 作業系統名稱。
 
-[English](README.md) · [指令規格](docs/CLI_SPEC.md) · [相容性說明](docs/COMPATIBILITY.md) · [疑難排解](docs/TROUBLESHOOTING.md) · [巡檢手冊](docs/COOKBOOK.md) · [報告範例](examples/reports/README.md) · [安全政策](SECURITY.md) · [研究來源與授權](docs/RESEARCH_AND_LICENSES.md)
+[English](README.md) · [安裝指南](install.md) · [指令規格](docs/CLI_SPEC.md) · [相容性說明](docs/COMPATIBILITY.md) · [疑難排解](docs/TROUBLESHOOTING.md) · [巡檢手冊](docs/COOKBOOK.md) · [報告範例](examples/reports/README.md) · [安全政策](SECURITY.md) · [研究來源與授權](docs/RESEARCH_AND_LICENSES.md)
 
 ## 功能
 
@@ -28,7 +28,7 @@ python -m pip install .
 adm --help
 ```
 
-套件發布後可使用 `pipx install asustor-nas-cli` 隔離安裝。Windows PowerShell 和離線 wheel 安裝方式見[發布與安裝說明](docs/PUBLISHING.md)。
+請依照[Windows、macOS 與 Ubuntu 安裝指南](install.md)，透過 `pipx` 安裝已檢視的 `v1.9.0` 原始碼標籤。專案尚未發布至 PyPI；明確發布前無法使用 PyPI 安裝。從本機原始碼安裝與離線 wheel 說明見[發布與套件建置](docs/PUBLISHING.md)。
 
 開發期間可從原始碼目錄執行：
 

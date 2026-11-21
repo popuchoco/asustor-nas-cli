@@ -44,7 +44,9 @@ READ_ONLY = {
 INSTRUCTIONS = (
     "Read-only tools for one ASUSTOR ADM NAS. SSH commands are fixed and allow-listed. "
     "No tool changes NAS data or services. Temperature readings are observations, not health verdicts. "
-    "Health summaries include coverage and generic configurable thermal advisories; unknown is not a clean bill of health. "
+    "Coverage is complete when expected observations parse, partial when some are missing or malformed, and unavailable when none are usable. "
+    "Summary state is report-specific; unknown or incomplete coverage is not a clean bill of health. "
+    "Health summaries include generic configurable thermal advisories. "
     "Report comparison accepts bounded report objects and does not connect to the NAS. "
     "File-name IOC scans are bounded and are not proof of no infection."
 )
@@ -94,8 +96,8 @@ HEALTH_SUMMARY_ARGUMENTS = _object(
 TOOLS = [
     {"name": "adm_status", "description": "Read system, CPU, memory and uptime observations over fixed SSH commands.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_health", "description": "Collect system, storage, RAID, network and disk observations; raw output is not a health guarantee.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
-    {"name": "adm_health_summary", "description": "Return a structured health summary with raw diagnostic sections, SMART/temperature observations, and explicit coverage.", "inputSchema": HEALTH_SUMMARY_ARGUMENTS, "annotations": READ_ONLY},
-    {"name": "adm_risk_signals", "description": "Return degraded RAID, failed SMART, high-temperature signals, and coverage without raw sections; unavailable observations remain unknown.", "inputSchema": HEALTH_SUMMARY_ARGUMENTS, "annotations": READ_ONLY},
+    {"name": "adm_health_summary", "description": "Collect read-only system, storage, RAID, SMART, temperature, service, UPS, and TCP observations. Returns a diagnostic-summary with raw sections, per-source coverage, report-specific state, risk signals, and recommended exit code. An unknown state is not a clean bill of health. Optional temperature_warning_celsius defaults to a generic 80 °C advisory, not a model-specific safety limit.", "inputSchema": HEALTH_SUMMARY_ARGUMENTS, "annotations": READ_ONLY},
+    {"name": "adm_risk_signals", "description": "Collect the same read-only observations as adm_health_summary and return a concise risk-signals report without raw SSH sections. Signals cover degraded RAID, failed SMART, and readings at or above the generic temperature_warning_celsius threshold (default 80 °C); service, UPS, and TCP observations do not add signals or change state/exit code. Unknown or incomplete coverage is not a clean bill of health.", "inputSchema": HEALTH_SUMMARY_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_storage", "description": "Read mounted filesystem capacity.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_raid", "description": "Read Linux software RAID status from /proc/mdstat.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},
     {"name": "adm_network", "description": "Read network interface and address observations.", "inputSchema": NO_ARGUMENTS, "annotations": READ_ONLY},

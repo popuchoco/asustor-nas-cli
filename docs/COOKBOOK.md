@@ -33,6 +33,18 @@ Interpret the result as follows:
 
 The default temperature advisory is 80 °C and can be adjusted with `--temperature-warning-celsius`. Sensor IDs are generic Linux zone names; they do not identify a component, and the threshold is not a model-specific safety limit. Review raw sections and verify any warning with the NAS vendor's guidance.
 
+### Interpreting common observations
+
+| Example | What the report says | Follow-up |
+| --- | --- | --- |
+| `coverage=partial`, no risk signals, exit code `1` | At least one required source was missing, malformed, or limited; no configured signal was observed in the available data. | Inspect the component coverage and raw sections, then repeat the relevant read-only command. Do not treat the empty signal list as an all-clear. |
+| `raid.state=degraded` or `raid_degraded` | `/proc/mdstat` reported a degraded software RAID member set. | Check the array and disk status in ADM, verify a current backup, and follow the storage vendor's recovery guidance before making changes. |
+| `smart.state=unknown` | The CLI could not confirm SMART health for one or more supported devices, for example because a drive was in standby or `smartctl` was unavailable. | Check device visibility and permissions. Unknown is not the same as passed; the CLI does not wake drives or start SMART self-tests. |
+| `temperature_high` | A generic Linux thermal-zone reading met the configured advisory threshold. The zone ID does not identify a component. | Recheck the reading and consult model-specific ADM or vendor guidance. The default 80 °C threshold is not a safe-temperature limit. |
+| `storage.maximum_use_percent=95` | The largest parsed filesystem usage was 95%; the CLI has no configured capacity warning threshold. | Identify the corresponding mount point in the report and review growth and free space using the NAS's normal storage tools. |
+| `raid.state=no_arrays` | The response was parseable and no Linux software RAID array was listed. | Confirm whether this model or volume layout is expected to use `/proc/mdstat`; this state is not a storage-health verdict. |
+| `not_reobserved` in a comparison | A field or signal from the earlier report was absent from a later report with incomplete coverage. | Collect a complete later report before concluding that the earlier condition cleared. |
+
 The health report also carries three optional operations observations: allowlisted service-process counts, local NUT UPS status and battery charge, and IPv4/IPv6 TCP state counts. These fields do not add risk signals or alter health summary exit codes. A zero process count means only that the process name was not observed; it does not say that a service is expected to run. Missing UPS support is reported as unavailable, not as a failed health check.
 
 Collect those observations individually when useful:

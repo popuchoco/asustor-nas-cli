@@ -4,7 +4,7 @@
 
 Safety-first Python CLI for ASUSTOR ADM NAS diagnostics, disk topology, DeadBolt ransomware checks, and guarded platform-driver module management. The command is named `adm`, after ASUSTOR's operating system.
 
-[繁體中文](README.zh-TW.md) · [Command specification](docs/CLI_SPEC.md) · [Compatibility notes](docs/COMPATIBILITY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Cookbook](docs/COOKBOOK.md) · [Report examples](examples/reports/README.md) · [Security](SECURITY.md) · [Research and licenses](docs/RESEARCH_AND_LICENSES.md)
+[繁體中文](README.zh-TW.md) · [Install](install.md) · [Command specification](docs/CLI_SPEC.md) · [Compatibility notes](docs/COMPATIBILITY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Cookbook](docs/COOKBOOK.md) · [Report examples](examples/reports/README.md) · [Security](SECURITY.md) · [Research and licenses](docs/RESEARCH_AND_LICENSES.md)
 
 ## What it does
 
@@ -28,7 +28,7 @@ python -m pip install .
 adm --help
 ```
 
-For isolated installs, use `pipx install asustor-nas-cli` after the package is published. Windows PowerShell and offline wheel instructions are in [publishing and installation](docs/PUBLISHING.md).
+Install the reviewed `v1.9.0` source tag with `pipx`; see the [Windows, macOS, and Ubuntu install guide](install.md). PyPI installation remains unavailable until a package is explicitly published. Local checkout and offline wheel instructions are in [publishing and installation](docs/PUBLISHING.md).
 
 For local development without installing:
 

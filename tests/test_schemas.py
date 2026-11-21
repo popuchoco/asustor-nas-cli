@@ -238,6 +238,23 @@ class PublishedSchemaTests(unittest.TestCase):
                 example = json.loads((examples / filename).read_text(encoding="utf-8"))
                 Draft202012Validator(SCHEMAS[schema_name]).validate(example)
 
+    def test_malformed_storage_percentage_stays_schema_valid_and_partial(self):
+        report = build_diagnostic_summary(
+            "storage",
+            {
+                "storage": (
+                    "Filesystem Size Used Avail Use% Mounted on\n"
+                    "/dev/md1 1T 1T 0 101% /volume1"
+                )
+            },
+            host="NAS",
+            ssh_port=22,
+            host_id="0123456789abcdef",
+        )
+        Draft202012Validator(SCHEMAS["diagnostic-summary"]).validate(report)
+        self.assertEqual(report["summary"]["coverage"], "partial")
+        self.assertEqual(report["summary"]["storage"]["parse_errors"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

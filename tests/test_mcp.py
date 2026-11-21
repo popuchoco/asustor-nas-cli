@@ -23,6 +23,16 @@ class McpProtocolTests(unittest.TestCase):
         self.assertIn("adm_security_compare", names)
         self.assertTrue(all(tool["annotations"]["readOnlyHint"] for tool in tools))
         self.assertNotIn("adm_platform_module", names)
+        by_name = {tool["name"]: tool for tool in tools}
+        for tool_name in ("adm_health_summary", "adm_risk_signals"):
+            with self.subTest(tool=tool_name):
+                tool = by_name[tool_name]
+                self.assertIn("coverage", tool["description"])
+                self.assertIn("temperature_warning_celsius", tool["description"])
+                self.assertEqual(
+                    tool["inputSchema"]["properties"]["temperature_warning_celsius"]["default"],
+                    80.0,
+                )
 
     def test_health_summary_and_risk_signals_use_read_only_observations(self):
         sections = {
